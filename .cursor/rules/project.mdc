@@ -1,0 +1,8 @@
+---
+description: Project-wide rules for V-Shape Workout Tracker
+alwaysApply: true
+---
+
+Read and follow `AGENTS.md` before implementing or reviewing code.
+Treat `.specify/memory/constitution.md` and `specs/001-mvp/spec.md` as source-of-truth product constraints.
+Keep the MVP dumbbell + floor + bodyweight only.
