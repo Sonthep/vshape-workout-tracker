@@ -26,28 +26,28 @@
 - [x] Implement set logger: weight, reps/duration, RIR.
 - [x] Show previous-session values.
 - [x] Implement set completion/edit.
-- [ ] Mobile E2E for complete set. (Auth-guard E2E added; a real logged-in "complete a set" E2E needs a way to mint a test session — no `SUPABASE_SERVICE_ROLE_KEY` or test-user credentials are configured yet.)
+- [x] Mobile E2E for complete set. (`tests/e2e/live-flow.spec.ts`, gated behind `RUN_LIVE_E2E=1` — signs up a real user against the live Supabase backend and drives the full flow through completing a set.)
 
 ## Phase 4 — Rest timer
-- [ ] Auto-start rest timer after completed set.
-- [ ] Pause/skip/adjust controls.
-- [ ] Preserve timer state across normal route interaction.
+- [x] Auto-start rest timer after completed set.
+- [x] Pause/skip/adjust controls.
+- [x] Preserve timer state across normal route interaction.
 
 ## Phase 5 — Finish + history
-- [ ] Finish session summary.
-- [ ] Workout history list/detail.
-- [ ] Basic progression indicator.
+- [x] Finish session summary.
+- [x] Workout history list/detail.
+- [x] Basic progression indicator.
 
 ## Phase 6 — Body progress
-- [ ] Add weight/waist/chest measurement form.
-- [ ] Add simple trend chart.
-- [ ] Validate dates/metric units.
+- [x] Add weight/waist/chest measurement form.
+- [x] Add simple trend chart.
+- [x] Validate dates/metric units.
 
 ## Phase 7 — Progress photos
-- [ ] Configure private Supabase storage bucket.
-- [ ] Upload front/side/back photos.
-- [ ] Signed/private retrieval only.
-- [ ] Add delete flow.
+- [x] Configure private Supabase storage bucket.
+- [x] Upload front/side/back photos.
+- [x] Signed/private retrieval only.
+- [x] Add delete flow.
 
 ## Phase 8 — PWA + release
 - [ ] Add installable PWA/service worker approach.

@@ -39,6 +39,12 @@ export default function HomePage() {
           {program.map((day) => <span key={day.day}>{day.weekday.slice(0, 3)}</span>)}
         </div>
       </section>
+
+      <div className="home-links">
+        <Link className="history-link-home" href="/history">View workout history →</Link>
+        <Link className="history-link-home" href="/progress">Track body progress →</Link>
+        <Link className="history-link-home" href="/photos">View progress photos →</Link>
+      </div>
     </main>
   );
 }

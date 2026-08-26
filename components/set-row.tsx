@@ -1,6 +1,9 @@
+"use client";
+
 import type { SetLog } from "@/lib/domain/types";
 import { formatPreviousSetHint } from "@/lib/workouts/session";
 import { logSet } from "@/app/session/[id]/actions";
+import { useRestTimer } from "@/components/rest-timer";
 
 export function SetRow({
   sessionId,
@@ -9,6 +12,8 @@ export function SetRow({
   isDuration,
   log,
   previousLog,
+  exerciseName,
+  restSeconds,
 }: {
   sessionId: string;
   workoutExerciseId: string;
@@ -16,13 +21,21 @@ export function SetRow({
   isDuration: boolean;
   log: SetLog | undefined;
   previousLog: SetLog | undefined;
+  exerciseName: string;
+  restSeconds: number;
 }) {
+  const { start } = useRestTimer();
   const previousHint = formatPreviousSetHint(previousLog, isDuration);
   const isCompleted = log?.completedAt != null;
 
+  async function completeSet(formData: FormData) {
+    await logSet(formData);
+    start(restSeconds, exerciseName);
+  }
+
   return (
     <li className="set-row">
-      <form action={logSet} className="set-form">
+      <form action={completeSet} className="set-form">
         <input type="hidden" name="sessionId" value={sessionId} />
         <input type="hidden" name="workoutExerciseId" value={workoutExerciseId} />
         <input type="hidden" name="setNumber" value={setNumber} />

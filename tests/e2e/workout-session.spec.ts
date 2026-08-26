@@ -10,3 +10,23 @@ test("session page requires auth", async ({ page }) => {
   await page.goto("/session/00000000-0000-0000-0000-000000000000");
   await expect(page).toHaveURL(/\/login$/);
 });
+
+test("history list requires auth", async ({ page }) => {
+  await page.goto("/history");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("history detail requires auth", async ({ page }) => {
+  await page.goto("/history/00000000-0000-0000-0000-000000000000");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("progress page requires auth", async ({ page }) => {
+  await page.goto("/progress");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("photos page requires auth", async ({ page }) => {
+  await page.goto("/photos");
+  await expect(page).toHaveURL(/\/login$/);
+});

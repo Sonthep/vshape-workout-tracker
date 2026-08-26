@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SetLog } from "@/lib/domain/types";
 import {
   formatPreviousSetHint,
+  formatSetValue,
   indexPreviousSetLogsByExercise,
   indexSetLogsByWorkoutExercise,
   isDurationExercise,
@@ -110,5 +111,26 @@ describe("formatPreviousSetHint", () => {
   it("returns null when a duration hint has no recorded duration", () => {
     const log = makeSetLog({ durationSeconds: null });
     expect(formatPreviousSetHint(log, true)).toBeNull();
+  });
+});
+
+describe("formatSetValue", () => {
+  it("shows a placeholder when the set was never logged", () => {
+    expect(formatSetValue(undefined, false)).toBe("—");
+  });
+
+  it("shows a placeholder when the set was logged but not completed", () => {
+    const log = makeSetLog({ weightKg: 10, reps: 10, completedAt: null });
+    expect(formatSetValue(log, false)).toBe("—");
+  });
+
+  it("formats a completed rep-based set with RIR", () => {
+    const log = makeSetLog({ weightKg: 20, reps: 10, rir: 2, completedAt: "2026-01-01T00:00:00Z" });
+    expect(formatSetValue(log, false)).toBe("20 kg × 10 reps (RIR 2)");
+  });
+
+  it("formats a completed duration-based set", () => {
+    const log = makeSetLog({ durationSeconds: 45, completedAt: "2026-01-01T00:00:00Z" });
+    expect(formatSetValue(log, true)).toBe("45 sec");
   });
 });

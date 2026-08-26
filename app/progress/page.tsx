@@ -1,0 +1,92 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { MeasurementForm } from "@/components/measurement-form";
+import { TrendChart } from "@/components/trend-chart";
+import type { BodyMeasurement } from "@/lib/domain/types";
+import type { TrendPoint } from "@/lib/progress/measurements";
+
+function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function toTrendPoints(measurements: BodyMeasurement[], pick: (m: BodyMeasurement) => number | null): TrendPoint[] {
+  return measurements
+    .filter((m) => pick(m) !== null)
+    .map((m) => ({ date: m.measuredAt, value: pick(m) as number }));
+}
+
+type MeasurementRow = {
+  measured_at: string;
+  weight_kg: number | null;
+  waist_cm: number | null;
+  chest_cm: number | null;
+};
+
+export default async function ProgressPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data, error } = await supabase
+    .from("body_measurements")
+    .select("measured_at, weight_kg, waist_cm, chest_cm")
+    .eq("user_id", user.id)
+    .order("measured_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  const measurements: BodyMeasurement[] = ((data ?? []) as MeasurementRow[]).map((row) => ({
+    measuredAt: row.measured_at,
+    weightKg: row.weight_kg,
+    waistCm: row.waist_cm,
+    chestCm: row.chest_cm,
+  }));
+
+  const recent = [...measurements].reverse();
+
+  return (
+    <main className="home-shell">
+      <Link className="back-link" href="/">← Back to home</Link>
+      <header className="home-header">
+        <p className="eyebrow">PROGRESS</p>
+        <h1>Body measurements</h1>
+      </header>
+
+      <MeasurementForm today={todayIso()} />
+
+      {measurements.length > 0 ? (
+        <section className="trend-grid" aria-label="Trends">
+          <TrendChart label="Weight" unit="kg" points={toTrendPoints(measurements, (m) => m.weightKg)} />
+          <TrendChart label="Waist" unit="cm" points={toTrendPoints(measurements, (m) => m.waistCm)} />
+          <TrendChart label="Chest" unit="cm" points={toTrendPoints(measurements, (m) => m.chestCm)} />
+        </section>
+      ) : null}
+
+      {recent.length > 0 ? (
+        <ol className="measurement-list">
+          {recent.map((entry) => (
+            <li key={entry.measuredAt} className="measurement-row">
+              <span className="history-date">{formatDate(entry.measuredAt)}</span>
+              <span className="measurement-values">
+                {entry.weightKg !== null ? `${entry.weightKg} kg` : "—"}
+                {" · "}
+                {entry.waistCm !== null ? `${entry.waistCm} cm waist` : "—"}
+                {" · "}
+                {entry.chestCm !== null ? `${entry.chestCm} cm chest` : "—"}
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="muted">No measurements logged yet.</p>
+      )}
+    </main>
+  );
+}

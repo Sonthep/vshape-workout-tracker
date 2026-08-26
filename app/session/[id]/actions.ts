@@ -33,3 +33,24 @@ export async function logSet(formData: FormData) {
 
   revalidatePath(`/session/${sessionId}`);
 }
+
+export async function finishSession(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const sessionId = String(formData.get("sessionId"));
+
+  const { error } = await supabase
+    .from("workout_sessions")
+    .update({ completed_at: new Date().toISOString() })
+    .eq("id", sessionId)
+    .eq("user_id", user.id)
+    .is("completed_at", null);
+
+  if (error) throw new Error(error.message);
+
+  redirect(`/history/${sessionId}`);
+}

@@ -105,6 +105,18 @@ export function parseNullableNumber(value: FormDataEntryValue | null): number | 
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export function formatSetValue(log: SetLog | undefined, isDuration: boolean): string {
+  if (!log || log.completedAt === null) return "—";
+  if (isDuration) return log.durationSeconds !== null ? `${log.durationSeconds} sec` : "—";
+  const parts: string[] = [];
+  if (log.weightKg !== null) parts.push(`${log.weightKg} kg`);
+  if (log.reps !== null) parts.push(`${log.reps} reps`);
+  if (parts.length === 0) return "—";
+  let value = parts.join(" × ");
+  if (log.rir !== null) value += ` (RIR ${log.rir})`;
+  return value;
+}
+
 export function formatPreviousSetHint(log: SetLog | undefined, isDuration: boolean): string | null {
   if (!log) return null;
   if (isDuration) {
