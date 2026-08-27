@@ -6,6 +6,7 @@ import { TrendChart } from "@/components/trend-chart";
 import type { BodyMeasurement } from "@/lib/domain/types";
 import type { TrendPoint } from "@/lib/progress/measurements";
 
+
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -55,8 +56,9 @@ export default async function ProgressPage() {
     <main className="home-shell">
       <Link className="back-link" href="/">← Back to home</Link>
       <header className="home-header">
-        <p className="eyebrow">PROGRESS</p>
-        <h1>Body measurements</h1>
+        <span className="eyebrow">PROGRESS</span>
+        <h1 style={{ margin: "4px 0 8px" }}>Body measurements</h1>
+        <p className="muted">Track your shoulder-to-waist taper, chest size, and bodyweight.</p>
       </header>
 
       <MeasurementForm today={todayIso()} />
@@ -70,22 +72,27 @@ export default async function ProgressPage() {
       ) : null}
 
       {recent.length > 0 ? (
-        <ol className="measurement-list">
-          {recent.map((entry) => (
-            <li key={entry.measuredAt} className="measurement-row">
-              <span className="history-date">{formatDate(entry.measuredAt)}</span>
-              <span className="measurement-values">
-                {entry.weightKg !== null ? `${entry.weightKg} kg` : "—"}
-                {" · "}
-                {entry.waistCm !== null ? `${entry.waistCm} cm waist` : "—"}
-                {" · "}
-                {entry.chestCm !== null ? `${entry.chestCm} cm chest` : "—"}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <section>
+          <span className="eyebrow" style={{ display: "block", marginBottom: 10 }}>LOGGED ENTRIES</span>
+          <ol className="measurement-list">
+            {recent.map((entry) => (
+              <li key={entry.measuredAt} className="measurement-row">
+                <span className="history-date">{formatDate(entry.measuredAt)}</span>
+                <span className="measurement-values">
+                  {entry.weightKg !== null ? `${entry.weightKg} kg` : "—"}
+                  {" · "}
+                  {entry.waistCm !== null ? `${entry.waistCm} cm waist` : "—"}
+                  {" · "}
+                  {entry.chestCm !== null ? `${entry.chestCm} cm chest` : "—"}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
       ) : (
-        <p className="muted">No measurements logged yet.</p>
+        <div className="next-workout" style={{ textAlign: "center", padding: "30px 20px" }}>
+          <p className="muted">No measurements logged yet. Use the form above to record your baseline stats.</p>
+        </div>
       )}
     </main>
   );

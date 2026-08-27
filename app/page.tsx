@@ -1,50 +1,58 @@
 import Link from "next/link";
-import { formatPrescription, getNextWorkout, program } from "@/lib/workouts/program";
+import { getNextWorkout, program } from "@/lib/workouts/program";
+import { WeeklySchedule } from "@/components/weekly-schedule";
+import { NextWorkoutCard } from "@/components/next-workout-card";
+import { CameraIcon, ChartIcon, FireIcon, HistoryIcon } from "@/components/icons";
 
 export default function HomePage() {
   const workout = getNextWorkout(new Date());
 
   return (
     <main className="home-shell">
-      <header className="home-header">
-        <p className="eyebrow">V-SHAPE</p>
-        <h1>Workout Tracker</h1>
-        <p className="muted">Dumbbell + Floor + Bodyweight only</p>
-      </header>
-
-      <section className="next-workout" aria-labelledby="next-workout-heading">
-        <p className="eyebrow">NEXT WORKOUT</p>
-        <p className="workout-day">DAY {workout.day} · {workout.weekday}</p>
-        <h2 id="next-workout-heading" lang="th">{workout.titleTh}</h2>
-        <p className="muted">{workout.focus.join(" · ")}</p>
-
-        <ol className="exercise-list">
-          {workout.exercises.map((exercise) => (
-            <li key={exercise.id} className="exercise-row">
-              <div>
-                <span>{exercise.name}</span>
-                {exercise.priority ? <span className="priority-label">Priority</span> : null}
-              </div>
-              <span className="prescription">{formatPrescription(exercise)}</span>
-            </li>
-          ))}
-        </ol>
-
-        <Link className="start-button" href={`/workout/${workout.day}`}>Start workout</Link>
-      </section>
-
-      <section className="schedule" aria-labelledby="schedule-heading">
-        <h2 id="schedule-heading">Weekly schedule</h2>
-        <div className="schedule-days">
-          {program.map((day) => <span key={day.day}>{day.weekday.slice(0, 3)}</span>)}
+      {/* Hero Welcome Banner */}
+      <section className="hero-banner" aria-label="Welcome">
+        <div className="hero-title-group">
+          <div className="hero-badge-pill">
+            <FireIcon className="w-3.5 h-3.5" />
+            <span>4-Day DB Routine</span>
+          </div>
+          <h1>Workout Tracker</h1>
+          <p className="muted">Dumbbell + Floor + Bodyweight only · V-Shape Optimized</p>
         </div>
       </section>
 
-      <div className="home-links">
-        <Link className="history-link-home" href="/history">View workout history →</Link>
-        <Link className="history-link-home" href="/progress">Track body progress →</Link>
-        <Link className="history-link-home" href="/photos">View progress photos →</Link>
-      </div>
+      {/* Primary Next Workout Card with Exercise Guide Modal Support */}
+      <NextWorkoutCard workout={workout} />
+
+      {/* Interactive Weekly Schedule with Guide Support */}
+      <WeeklySchedule program={program} todayDayNumber={workout.day} />
+
+      {/* Quick Navigation Cards */}
+      <section aria-label="Quick Features">
+        <span className="eyebrow" style={{ display: "block", marginBottom: 8 }}>EXPLORE & TRACK</span>
+        <div className="home-links-grid">
+          <Link className="home-feature-card" href="/history">
+            <div className="feature-icon-wrap history-color">
+              <HistoryIcon className="w-5 h-5" />
+            </div>
+            <span className="feature-card-label">History</span>
+          </Link>
+
+          <Link className="home-feature-card" href="/progress">
+            <div className="feature-icon-wrap progress-color">
+              <ChartIcon className="w-5 h-5" />
+            </div>
+            <span className="feature-card-label">Progress</span>
+          </Link>
+
+          <Link className="home-feature-card" href="/photos">
+            <div className="feature-icon-wrap photos-color">
+              <CameraIcon className="w-5 h-5" />
+            </div>
+            <span className="feature-card-label">Photos</span>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PhotoUploadForm } from "@/components/photo-upload-form";
 import { deletePhoto } from "@/app/photos/actions";
 import type { PhotoView } from "@/lib/progress/photos";
+import { CameraIcon } from "@/components/icons";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SECONDS = 60;
@@ -52,44 +53,53 @@ export default async function PhotosPage() {
     <main className="home-shell">
       <Link className="back-link" href="/">← Back to home</Link>
       <header className="home-header">
-        <p className="eyebrow">PROGRESS</p>
-        <h1>Progress photos</h1>
-        <p className="muted">Private to your account. Never publicly accessible.</p>
+        <span className="eyebrow">PROGRESS</span>
+        <h1 style={{ margin: "4px 0 8px" }}>Progress photos</h1>
+        <p className="muted">Private to your account. Encrypted & never publicly accessible.</p>
       </header>
 
       <PhotoUploadForm today={todayIso()} />
 
       {photos.length === 0 ? (
-        <p className="muted">No photos yet.</p>
+        <div className="next-workout" style={{ textAlign: "center", padding: "30px 20px" }}>
+          <div className="feature-icon-wrap photos-color" style={{ margin: "0 auto 12px", width: 44, height: 44 }}>
+            <CameraIcon className="w-5 h-5" />
+          </div>
+          <h2 style={{ margin: "0 0 6px" }}>No photos uploaded yet</h2>
+          <p className="muted">Upload front, side, and back physique photos to monitor your physical transformation.</p>
+        </div>
       ) : (
-        <ol className="photo-grid">
-          {photos.map((photo) => (
-            <li key={photo.id} className="photo-card">
-              <div className="photo-thumb">
-                {photo.signedUrl ? (
-                  <Image
-                    src={photo.signedUrl}
-                    alt={`${photo.view} view, ${formatDate(photo.taken_at)}`}
-                    fill
-                    sizes="160px"
-                    style={{ objectFit: "cover" }}
-                  />
-                ) : (
-                  <span className="photo-thumb-error">Unavailable</span>
-                )}
-              </div>
-              <div className="photo-meta">
-                <span className="photo-date">{formatDate(photo.taken_at)}</span>
-                <span className="photo-view">{photo.view}</span>
-              </div>
-              <form action={deletePhoto}>
-                <input type="hidden" name="photoId" value={photo.id} />
-                <input type="hidden" name="storagePath" value={photo.storage_path} />
-                <button type="submit" className="photo-delete">Delete</button>
-              </form>
-            </li>
-          ))}
-        </ol>
+        <section>
+          <span className="eyebrow" style={{ display: "block", marginBottom: 12 }}>YOUR GALLERY ({photos.length})</span>
+          <ol className="photo-grid">
+            {photos.map((photo) => (
+              <li key={photo.id} className="photo-card">
+                <div className="photo-thumb">
+                  {photo.signedUrl ? (
+                    <Image
+                      src={photo.signedUrl}
+                      alt={`${photo.view} view, ${formatDate(photo.taken_at)}`}
+                      fill
+                      sizes="160px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <span className="photo-thumb-error">Unavailable</span>
+                  )}
+                </div>
+                <div className="photo-meta">
+                  <span className="photo-date">{formatDate(photo.taken_at)}</span>
+                  <span className="photo-view">{photo.view}</span>
+                </div>
+                <form action={deletePhoto}>
+                  <input type="hidden" name="photoId" value={photo.id} />
+                  <input type="hidden" name="storagePath" value={photo.storage_path} />
+                  <button type="submit" className="photo-delete">Delete</button>
+                </form>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
     </main>
   );

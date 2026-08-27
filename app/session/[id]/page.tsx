@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { formatPrescription, program } from "@/lib/workouts/program";
+import { program } from "@/lib/workouts/program";
 import { createClient } from "@/lib/supabase/server";
-import { getSessionDetail, isDurationExercise } from "@/lib/workouts/session";
-import { getDefaultRestSeconds } from "@/lib/workouts/rest";
-import { SetRow } from "@/components/set-row";
+import { getSessionDetail } from "@/lib/workouts/session";
 import { RestTimerBar, RestTimerProvider } from "@/components/rest-timer";
 import { finishSession } from "@/app/session/[id]/actions";
+import { CheckCircleIcon, DumbbellIcon, TrophyIcon } from "@/components/icons";
+import { SessionExerciseList } from "@/components/session-exercise-list";
 
 export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,56 +23,60 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   const workout = program.find((item) => item.day === session.programDay);
   if (!workout) notFound();
 
+  // Calculate completed sets progress
+  const totalSetsCount = session.exercises.reduce((acc, e) => acc + e.targetSets, 0);
+  const completedSetsCount = session.exercises.reduce(
+    (acc, e) => acc + Object.values(e.setLogs).filter((s) => s?.completedAt != null).length,
+    0
+  );
+  const progressPercent = totalSetsCount > 0 ? Math.round((completedSetsCount / totalSetsCount) * 100) : 0;
+
   return (
     <RestTimerProvider>
       <main className="home-shell session-shell">
         <Link className="back-link" href={`/workout/${session.programDay}`}>← Back to workout plan</Link>
         <header className="home-header workout-header">
-          <p className="eyebrow">DAY {session.programDay} · {workout.weekday}</p>
-          <h1 lang="th">{workout.titleTh}</h1>
-          <p className="muted">Log each set as you finish it. Values from your last session show as hints.</p>
+          <div className="workout-day-pill">
+            <DumbbellIcon className="w-3.5 h-3.5" />
+            <span>DAY {session.programDay} · {workout.weekday}</span>
+          </div>
+          <h1 lang="th" style={{ margin: "10px 0 6px" }}>{workout.titleTh}</h1>
+          <p className="muted">Log each set as you finish it. Tap &quot;สอนท่า&quot; anytime to review form cues.</p>
+
+          {/* Session Progress Bar */}
+          <div style={{ marginTop: 16, background: "rgba(255, 255, 255, 0.05)", borderRadius: "var(--radius-full)", padding: "4px 12px", border: "1px solid var(--panel-border)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontWeight: 700, marginBottom: 4, color: "var(--text-secondary)" }}>
+              <span>WORKOUT PROGRESS</span>
+              <span style={{ color: "var(--accent-primary)" }}>{completedSetsCount}/{totalSetsCount} sets ({progressPercent}%)</span>
+            </div>
+            <div style={{ width: "100%", height: 6, background: "rgba(0, 0, 0, 0.4)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+              <div
+                style={{
+                  width: `${progressPercent}%`,
+                  height: "100%",
+                  background: "linear-gradient(90deg, var(--accent-primary) 0%, #38bdf8 100%)",
+                  borderRadius: "var(--radius-full)",
+                  transition: "width 0.3s ease",
+                }}
+              />
+            </div>
+          </div>
         </header>
 
-        <ol className="session-exercise-list">
-          {session.exercises.map((exercise, index) => {
-            const prescription = workout.exercises.find((e) => e.id === exercise.exerciseId);
-            const duration = isDurationExercise(exercise);
-            const restSeconds = getDefaultRestSeconds(exercise);
-            return (
-              <li key={exercise.id} className="session-exercise">
-                <div className="session-exercise-header">
-                  <h2>{index + 1}. {exercise.name}</h2>
-                  {prescription ? <span className="prescription">{formatPrescription(prescription)}</span> : null}
-                </div>
-                <ol className="set-list">
-                  {Array.from({ length: exercise.targetSets }, (_, setIndex) => {
-                    const setNumber = setIndex + 1;
-                    return (
-                      <SetRow
-                        key={setNumber}
-                        sessionId={session.id}
-                        workoutExerciseId={exercise.id}
-                        setNumber={setNumber}
-                        isDuration={duration}
-                        log={exercise.setLogs[setNumber]}
-                        previousLog={exercise.previousSets[setNumber]}
-                        exerciseName={exercise.name}
-                        restSeconds={restSeconds}
-                      />
-                    );
-                  })}
-                </ol>
-              </li>
-            );
-          })}
-        </ol>
+        <SessionExerciseList session={session} workout={workout} />
 
         {session.completedAt ? (
-          <Link href={`/history/${session.id}`} className="start-button finish-button">View summary</Link>
+          <Link href={`/history/${session.id}`} className="start-button finish-button">
+            <CheckCircleIcon className="w-5 h-5" />
+            <span>View summary</span>
+          </Link>
         ) : (
           <form action={finishSession} className="finish-form">
             <input type="hidden" name="sessionId" value={session.id} />
-            <button type="submit" className="start-button finish-button">Finish workout</button>
+            <button type="submit" className="start-button finish-button">
+              <TrophyIcon className="w-5 h-5" />
+              <span>Finish workout</span>
+            </button>
           </form>
         )}
       </main>

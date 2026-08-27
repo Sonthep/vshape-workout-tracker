@@ -15,17 +15,29 @@ export function TrendChart({ label, unit, points }: { label: string; unit: strin
   const delta = points.length > 1 ? latest.value - first.value : null;
   const direction = delta === null || delta === 0 ? "–" : delta > 0 ? "▲" : "▼";
 
+  // Area path for gradient fill
+  const areaPath = points.length > 1 ? `${path} L ${width - 4},${height} L 4,${height} Z` : "";
+
   return (
     <div className="trend-card">
       <div className="trend-header">
         <span className="trend-label">{label}</span>
-        <span className="trend-value">{latest.value} {unit}</span>
+        <span className="trend-value">{latest.value} <span style={{ fontSize: "1rem", color: "var(--text-secondary)" }}>{unit}</span></span>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="trend-svg" role="img" aria-label={`${label} trend`}>
-        <path d={path} fill="none" stroke="currentColor" strokeWidth={2} />
+        <defs>
+          <linearGradient id={`grad-${label}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        {areaPath && <path d={areaPath} fill={`url(#grad-${label})`} />}
+        <path d={path} fill="none" stroke="var(--accent-primary)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       {delta !== null ? (
-        <p className="trend-delta">{direction} {Math.abs(delta).toFixed(1)} {unit} since {formatDate(first.date)}</p>
+        <p className="trend-delta" style={{ color: delta < 0 ? "var(--accent-primary)" : "var(--accent-gold)" }}>
+          {direction} {Math.abs(delta).toFixed(1)} {unit} since {formatDate(first.date)}
+        </p>
       ) : null}
     </div>
   );

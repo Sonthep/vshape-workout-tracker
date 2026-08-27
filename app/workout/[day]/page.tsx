@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { formatPrescription, program } from "@/lib/workouts/program";
+import { program } from "@/lib/workouts/program";
 import { createClient } from "@/lib/supabase/server";
 import { startSession } from "./actions";
+import { DumbbellIcon, MuscleTagIcon } from "@/components/icons";
+import { WorkoutDayView } from "@/components/workout-day-view";
 
 export default async function WorkoutPage({ params }: { params: Promise<{ day: string }> }) {
   const { day } = await params;
@@ -17,22 +19,23 @@ export default async function WorkoutPage({ params }: { params: Promise<{ day: s
     <main className="home-shell">
       <Link className="back-link" href="/">← Back to workout plan</Link>
       <header className="home-header workout-header">
-        <p className="eyebrow">DAY {workout.day} · {workout.weekday}</p>
-        <h1 lang="th">{workout.titleTh}</h1>
-        <p className="muted">Your session is ready. Start logging when you begin your first set.</p>
+        <div className="workout-day-pill">
+          <DumbbellIcon className="w-3.5 h-3.5" />
+          <span>DAY {workout.day} · {workout.weekday}</span>
+        </div>
+        <h1 lang="th" style={{ margin: "10px 0 6px" }}>{workout.titleTh}</h1>
+        <div className="focus-tags" style={{ margin: "4px 0 12px" }}>
+          {workout.focus.map((tag) => (
+            <span key={tag} className="focus-tag">
+              <MuscleTagIcon name={tag} />
+              <span>{tag}</span>
+            </span>
+          ))}
+        </div>
+        <p className="muted">Your session is ready. Tap any exercise to review form cues, or start logging when you begin your first set.</p>
       </header>
-      <ol className="exercise-list workout-exercises">
-        {workout.exercises.map((exercise, index) => (
-          <li key={exercise.id} className="exercise-row">
-            <div><span>{index + 1}. {exercise.name}</span></div>
-            <span className="prescription">{formatPrescription(exercise)}</span>
-          </li>
-        ))}
-      </ol>
-      <form action={startSession}>
-        <input type="hidden" name="day" value={workout.day} />
-        <button type="submit" className="start-button">Start session</button>
-      </form>
+
+      <WorkoutDayView workout={workout} startSessionAction={startSession} />
     </main>
   );
 }

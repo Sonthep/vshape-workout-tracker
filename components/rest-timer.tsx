@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from "react";
+import { TimerIcon } from "@/components/icons";
 
 const ADJUST_STEP_SECONDS = 15;
 
@@ -28,11 +29,6 @@ type TimerAction =
   | { type: "skip" }
   | { type: "adjust"; deltaSeconds: number; now: number };
 
-/**
- * A reducer (rather than several independent useState calls) keeps rapid,
- * batched taps on -15/+15/pause/skip correct: each action is applied against
- * the state produced by the previous one instead of a stale render closure.
- */
 function reducer(state: TimerState, action: TimerAction): TimerState {
   switch (action.type) {
     case "start":
@@ -87,11 +83,6 @@ type RestTimerContextValue = {
 
 const RestTimerContext = createContext<RestTimerContextValue | null>(null);
 
-/**
- * Rest state lives in a Client Component that stays mounted across a
- * Server Action's revalidatePath refresh, so submitting another set on the
- * same session page never resets an in-progress rest.
- */
 export function RestTimerProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { label, totalSeconds, remainingSeconds, running, endAt } = state;
@@ -137,8 +128,13 @@ export function RestTimerBar() {
   return (
     <div className="rest-timer-bar" role="status" aria-live="polite">
       <div className="rest-timer-info">
-        <span className="rest-timer-label">{done ? "Rest complete" : `Rest · ${label}`}</span>
-        <span className="rest-timer-clock">{formatClock(remainingSeconds)}</span>
+        <div className="feature-icon-wrap" style={{ width: 36, height: 36, background: "rgba(0, 240, 132, 0.15)", color: "var(--accent-primary)" }}>
+          <TimerIcon className="w-5 h-5" />
+        </div>
+        <div className="rest-timer-clock-wrap">
+          <span className="rest-timer-label">{done ? "Rest complete" : `Rest · ${label}`}</span>
+          <span className="rest-timer-clock">{formatClock(remainingSeconds)}</span>
+        </div>
       </div>
       <div className="rest-timer-controls">
         {!done ? (
@@ -146,7 +142,11 @@ export function RestTimerBar() {
             <button type="button" onClick={() => adjust(-ADJUST_STEP_SECONDS)} aria-label="Subtract 15 seconds">
               −15
             </button>
-            <button type="button" onClick={running ? pause : resume}>
+            <button
+              type="button"
+              onClick={running ? pause : resume}
+              className={running ? "rest-timer-pause-btn" : ""}
+            >
               {running ? "Pause" : "Resume"}
             </button>
             <button type="button" onClick={() => adjust(ADJUST_STEP_SECONDS)} aria-label="Add 15 seconds">

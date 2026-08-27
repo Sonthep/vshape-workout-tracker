@@ -4,6 +4,7 @@ import { formatPrescription, program } from "@/lib/workouts/program";
 import { createClient } from "@/lib/supabase/server";
 import { formatSetValue, getSessionDetail, isDurationExercise } from "@/lib/workouts/session";
 import { formatVolumeDelta, summarizeSession } from "@/lib/workouts/history";
+import { DumbbellIcon } from "@/components/icons";
 
 function formatDateTime(value: string): string {
   return new Date(value).toLocaleString("en-GB", {
@@ -37,8 +38,11 @@ export default async function HistoryDetailPage({ params }: { params: Promise<{ 
     <main className="home-shell">
       <Link className="back-link" href="/history">← Back to history</Link>
       <header className="home-header workout-header">
-        <p className="eyebrow">DAY {session.programDay} · {workout.weekday}</p>
-        <h1 lang="th">{workout.titleTh}</h1>
+        <div className="workout-day-pill">
+          <DumbbellIcon className="w-3.5 h-3.5" />
+          <span>DAY {session.programDay} · {workout.weekday}</span>
+        </div>
+        <h1 lang="th" style={{ margin: "8px 0 4px" }}>{workout.titleTh}</h1>
         <p className="muted">{formatDateTime(session.completedAt)}</p>
       </header>
 
@@ -61,7 +65,10 @@ export default async function HistoryDetailPage({ params }: { params: Promise<{ 
           return (
             <li key={exercise.id} className="session-exercise">
               <div className="session-exercise-header">
-                <h2>{index + 1}. {exercise.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span className="exercise-badge-num">{index + 1}</span>
+                  <h2>{exercise.name}</h2>
+                </div>
                 {prescription ? <span className="prescription">{formatPrescription(prescription)}</span> : null}
               </div>
               <ol className="history-set-list">
