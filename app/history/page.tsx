@@ -33,7 +33,7 @@ export default async function HistoryPage() {
               <Link href={`/history/${item.id}`} className="history-link">
                 <div>
                   <span className="history-date">{formatDate(item.completedAt)}</span>
-                  <span className="history-title">Day {item.programDay} · {item.weekday} — {item.titleTh}</span>
+                  <span className="history-title">Day {item.programDay} · {item.weekday} — <span lang="th">{item.titleTh}</span></span>
                 </div>
                 <span className="history-stats">{item.completedSets}/{item.totalSets} sets · {Math.round(item.totalVolumeKg)} kg</span>
               </Link>

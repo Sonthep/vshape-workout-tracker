@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Inter } from "next/font/google";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import "./globals.css";
 
 const displayFont = Bebas_Neue({
@@ -18,10 +19,20 @@ export const metadata: Metadata = {
   description: "Mobile-first dumbbell workout tracker",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#111111",
+};
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="th" className={`${displayFont.variable} ${bodyFont.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
+      <body>
+        {children}
+        <ServiceWorkerRegistration />
+      </body>
     </html>
   );
 }

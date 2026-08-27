@@ -50,9 +50,9 @@
 - [x] Add delete flow.
 
 ## Phase 8 — PWA + release
-- [ ] Add installable PWA/service worker approach.
-- [ ] Accessibility pass.
-- [ ] Mobile performance pass.
-- [ ] Production RLS review.
-- [ ] CI green.
-- [ ] Deploy to Vercel.
+- [x] Add installable PWA/service worker approach. (Icons generated via `next/og` `ImageResponse` at `/icon`, `/apple-icon`, `/icons/192`, `/icons/512`; manifest wired up; `public/sw.js` caches an `/offline` fallback for navigations, registered from `app/layout.tsx`.)
+- [x] Accessibility pass. (`<html lang="en">` with `lang="th"` on the Thai workout-title elements; global `:focus-visible` outline; `prefers-reduced-motion` support; `viewport-fit=cover` so the rest-timer's existing safe-area CSS actually applies.)
+- [x] Mobile performance pass. (Reviewed: self-hosted fonts via `next/font`, `next/image` for photos, no chart/animation dependency — hand-rolled SVG sparkline — and client-component surface stays deliberately minimal; no changes needed.)
+- [x] Production RLS review. (Confirmed all 7 `public.*` tables have RLS enabled with an owner-scoped policy, `exercises` is read-only to authenticated users, `storage.objects` policies for `progress-photos` are scoped per-user folder, and no service-role key appears anywhere in app code.)
+- [x] CI green. (`.github/workflows/ci.yml` already existed and was green; extended it to also run the Playwright E2E suite, adding placeholder `NEXT_PUBLIC_SUPABASE_*` env vars after finding — and fixing — a real crash: auth-guard pages threw instead of redirecting when Supabase env vars were entirely absent, exactly the CI environment. Verified locally by simulating the CI env before trusting it.)
+- [ ] Deploy to Vercel. (Not done — requires the user's own Vercel account; this agent has no deploy credentials. App builds cleanly and is deploy-ready.)

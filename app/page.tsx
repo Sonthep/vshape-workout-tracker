@@ -15,7 +15,7 @@ export default function HomePage() {
       <section className="next-workout" aria-labelledby="next-workout-heading">
         <p className="eyebrow">NEXT WORKOUT</p>
         <p className="workout-day">DAY {workout.day} · {workout.weekday}</p>
-        <h2 id="next-workout-heading">{workout.titleTh}</h2>
+        <h2 id="next-workout-heading" lang="th">{workout.titleTh}</h2>
         <p className="muted">{workout.focus.join(" · ")}</p>
 
         <ol className="exercise-list">

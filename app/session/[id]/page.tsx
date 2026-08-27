@@ -29,7 +29,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         <Link className="back-link" href={`/workout/${session.programDay}`}>← Back to workout plan</Link>
         <header className="home-header workout-header">
           <p className="eyebrow">DAY {session.programDay} · {workout.weekday}</p>
-          <h1>{workout.titleTh}</h1>
+          <h1 lang="th">{workout.titleTh}</h1>
           <p className="muted">Log each set as you finish it. Values from your last session show as hints.</p>
         </header>
 

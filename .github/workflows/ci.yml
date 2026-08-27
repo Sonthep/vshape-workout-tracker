@@ -8,6 +8,13 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      # Placeholder values so Supabase client construction doesn't throw —
+      # the default test suite never hits the real backend (only the
+      # RUN_LIVE_E2E-gated live-flow test does, and that never runs in CI).
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder-key
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,3 +29,5 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

@@ -38,7 +38,7 @@ export default async function HistoryDetailPage({ params }: { params: Promise<{ 
       <Link className="back-link" href="/history">← Back to history</Link>
       <header className="home-header workout-header">
         <p className="eyebrow">DAY {session.programDay} · {workout.weekday}</p>
-        <h1>{workout.titleTh}</h1>
+        <h1 lang="th">{workout.titleTh}</h1>
         <p className="muted">{formatDateTime(session.completedAt)}</p>
       </header>
 

@@ -18,7 +18,7 @@ export default async function WorkoutPage({ params }: { params: Promise<{ day: s
       <Link className="back-link" href="/">← Back to workout plan</Link>
       <header className="home-header workout-header">
         <p className="eyebrow">DAY {workout.day} · {workout.weekday}</p>
-        <h1>{workout.titleTh}</h1>
+        <h1 lang="th">{workout.titleTh}</h1>
         <p className="muted">Your session is ready. Start logging when you begin your first set.</p>
       </header>
       <ol className="exercise-list workout-exercises">
