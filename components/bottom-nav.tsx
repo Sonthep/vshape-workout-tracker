@@ -13,10 +13,10 @@ export function BottomNav() {
   }
 
   const links = [
-    { href: "/", label: "Program", icon: DumbbellIcon, match: (p: string) => p === "/" || p.startsWith("/workout") },
-    { href: "/history", label: "History", icon: HistoryIcon, match: (p: string) => p.startsWith("/history") },
-    { href: "/progress", label: "Progress", icon: ChartIcon, match: (p: string) => p.startsWith("/progress") },
-    { href: "/photos", label: "Photos", icon: CameraIcon, match: (p: string) => p.startsWith("/photos") },
+    { href: "/", label: "โปรแกรม", icon: DumbbellIcon, match: (p: string) => p === "/" || p.startsWith("/workout") },
+    { href: "/history", label: "ประวัติ", icon: HistoryIcon, match: (p: string) => p.startsWith("/history") },
+    { href: "/progress", label: "พัฒนาการ", icon: ChartIcon, match: (p: string) => p.startsWith("/progress") },
+    { href: "/photos", label: "รูปภาพ", icon: CameraIcon, match: (p: string) => p.startsWith("/photos") },
   ];
 
   return (

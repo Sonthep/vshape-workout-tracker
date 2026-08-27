@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type ExerciseGuide, getExerciseGuide } from "@/lib/workouts/exercise-guides";
 import { DumbbellIcon, FireIcon, MuscleTagIcon } from "@/components/icons";
 import { ExerciseIllustration } from "@/components/exercise-illustrations";
@@ -16,6 +16,48 @@ export function ExerciseGuideModal({
 }) {
   const [activeTab, setActiveTab] = useState<"steps" | "muscles" | "tips">("steps");
   const [mediaMode, setMediaMode] = useState<"photo" | "diagram">("photo");
+  const [isMediaExpanded, setIsMediaExpanded] = useState(true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => dialogRef.current?.focus());
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [exerciseId, isOpen, onClose]);
 
   if (!isOpen || !exerciseId) return null;
 
@@ -23,8 +65,16 @@ export function ExerciseGuideModal({
   if (!guide) return null;
 
   return (
-    <div className="guide-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="guide-modal-container" onClick={(e) => e.stopPropagation()}>
+    <div className="guide-modal-backdrop" onClick={onClose}>
+      <div
+        ref={dialogRef}
+        className="guide-modal-container"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exercise-guide-title"
+        tabIndex={-1}
+      >
         {/* Header */}
         <div className="guide-modal-header">
           <div>
@@ -35,7 +85,7 @@ export function ExerciseGuideModal({
                 <span>{guide.equipment}</span>
               </span>
             </div>
-            <h2 className="guide-title">{guide.name}</h2>
+            <h2 id="exercise-guide-title" className="guide-title">{guide.name}</h2>
             <p className="guide-subtitle" lang="th">{guide.nameTh}</p>
           </div>
           <button type="button" className="guide-close-btn" onClick={onClose} aria-label="Close guide">
@@ -47,7 +97,7 @@ export function ExerciseGuideModal({
         <div className="guide-media-showcase">
           <div className="guide-media-topbar">
             <span className="guide-media-label">
-              {mediaMode === "photo" ? "📸 ภาพสาธิตท่าฝึก 3D Anatomy" : "📐 ไดอะแกรมทิศทางการออกแรง"}
+              {mediaMode === "photo" ? "ภาพสาธิตท่าฝึก 3D" : "ไดอะแกรมการเคลื่อนไหว"}
             </span>
             <div className="guide-media-toggle-pills">
               <button
@@ -65,9 +115,17 @@ export function ExerciseGuideModal({
                 ไดอะแกรม
               </button>
             </div>
+            <button
+              type="button"
+              className="guide-media-collapse"
+              aria-expanded={isMediaExpanded}
+              onClick={() => setIsMediaExpanded((value) => !value)}
+            >
+              {isMediaExpanded ? "ย่อภาพ" : "แสดงภาพ"}
+            </button>
           </div>
 
-          <div className="guide-media-view">
+          {isMediaExpanded ? <div className="guide-media-view">
             {mediaMode === "photo" ? (
               <div className="guide-photo-wrap">
                 <img
@@ -91,7 +149,7 @@ export function ExerciseGuideModal({
                 <ExerciseIllustration exerciseId={guide.id} className="guide-svg-canvas" />
               </div>
             )}
-          </div>
+          </div> : null}
         </div>
 
         {/* V-Shape Impact Callout Banner */}
@@ -106,33 +164,53 @@ export function ExerciseGuideModal({
         </div>
 
         {/* Tabs Bar */}
-        <div className="guide-tabs" role="tablist">
+        <div
+          className="guide-tabs"
+          role="tablist"
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            const order = ["steps", "muscles", "tips"] as const;
+            const current = order.indexOf(activeTab);
+            const delta = event.key === "ArrowRight" ? 1 : -1;
+            const next = order[(current + delta + order.length) % order.length];
+            setActiveTab(next);
+            requestAnimationFrame(() =>
+              dialogRef.current?.querySelector<HTMLElement>(`[data-guide-tab="${next}"]`)?.focus(),
+            );
+          }}
+        >
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === "steps"}
+            data-guide-tab="steps"
+            tabIndex={activeTab === "steps" ? 0 : -1}
             className={`guide-tab-btn ${activeTab === "steps" ? "active" : ""}`}
             onClick={() => setActiveTab("steps")}
           >
-            📋 วิธีเล่นทีละขั้นตอน
+            วิธีเล่น
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === "muscles"}
+            data-guide-tab="muscles"
+            tabIndex={activeTab === "muscles" ? 0 : -1}
             className={`guide-tab-btn ${activeTab === "muscles" ? "active" : ""}`}
             onClick={() => setActiveTab("muscles")}
           >
-            🎯 กล้ามเนื้อเป้าหมาย
+            กล้ามเนื้อ
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === "tips"}
+            data-guide-tab="tips"
+            tabIndex={activeTab === "tips" ? 0 : -1}
             className={`guide-tab-btn ${activeTab === "tips" ? "active" : ""}`}
             onClick={() => setActiveTab("tips")}
           >
-            💡 เทคนิค & ข้อควรระวัง
+            เทคนิคและข้อควรระวัง
           </button>
         </div>
 
@@ -225,7 +303,7 @@ export function ExerciseGuideModal({
         {/* Footer */}
         <div className="guide-modal-footer">
           <button type="button" className="start-button" onClick={onClose}>
-            เข้าใจแล้ว พร้อมฝึก
+            ปิดคู่มือ
           </button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { isDurationExercise } from "@/lib/workouts/session";
 import { getDefaultRestSeconds } from "@/lib/workouts/rest";
 import { SetRow } from "@/components/set-row";
 import { ExerciseGuideModal, ExerciseInfoButton } from "@/components/exercise-guide-modal";
+import { ExerciseMotionPreview } from "@/components/exercise-motion-preview";
 
 export function SessionExerciseList({
   session,
@@ -45,6 +46,10 @@ export function SessionExerciseList({
                 </div>
                 {prescription ? <span className="prescription">{formatPrescription(prescription)}</span> : null}
               </div>
+              <ExerciseMotionPreview
+                exerciseId={exercise.exerciseId}
+                exerciseName={exercise.name}
+              />
               <ol className="set-list">
                 {Array.from({ length: exercise.targetSets }, (_, setIndex) => {
                   const setNumber = setIndex + 1;

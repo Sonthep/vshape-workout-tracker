@@ -53,7 +53,7 @@ export function WorkoutDayView({
         <input type="hidden" name="day" value={workout.day} />
         <button type="submit" className="start-button">
           <PlayIcon className="w-4 h-4" />
-          <span>Start session</span>
+          <span>เริ่มเซสชัน</span>
         </button>
       </form>
 

@@ -1,11 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import type { SetLog } from "@/lib/domain/types";
 import { formatPreviousSetHint } from "@/lib/workouts/session";
 import { logSet } from "@/app/session/[id]/actions";
 import { useRestTimer } from "@/components/rest-timer";
 import { CheckCircleIcon } from "@/components/icons";
+
+function CompleteSetButton({ isCompleted }: { isCompleted: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className={isCompleted ? "set-complete-button done" : "set-complete-button"}
+    >
+      {pending ? "กำลังบันทึก…" : isCompleted ? "แก้ไขเซต" : "บันทึกเซต"}
+    </button>
+  );
+}
 
 export function SetRow({
   sessionId,
@@ -203,18 +217,20 @@ export function SetRow({
           )}
 
           <label className="set-field set-field-rir">
-            <span>RIR</span>
-            <div className="stepper-input-wrap">
-              <input
-                type="number"
-                inputMode="numeric"
-                name="rir"
-                min={0}
-                max={5}
-                value={rir}
-                onChange={(e) => setRir(e.target.value)}
-                placeholder={previousLog?.rir?.toString() ?? "2"}
-              />
+            <span>RIR (แรงที่เหลือ)</span>
+            <input type="hidden" name="rir" value={rir} />
+            <div className="rir-selector" role="group" aria-label="จำนวนครั้งที่ยังทำต่อได้">
+              {[0, 1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={rir === String(value) ? "active" : ""}
+                  aria-pressed={rir === String(value)}
+                  onClick={() => setRir(String(value))}
+                >
+                  {value}
+                </button>
+              ))}
             </div>
           </label>
         </div>
@@ -225,9 +241,7 @@ export function SetRow({
           </div>
         ) : null}
 
-        <button type="submit" className={isCompleted ? "set-complete-button done" : "set-complete-button"}>
-          {isCompleted ? "Update set" : "Complete set"}
-        </button>
+        <CompleteSetButton isCompleted={isCompleted} />
       </form>
     </li>
   );

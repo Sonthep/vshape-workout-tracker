@@ -23,10 +23,10 @@ export function WeeklySchedule({
       <section className="weekly-schedule-card" aria-labelledby="schedule-heading">
         <div className="schedule-header">
           <div>
-            <span className="section-tag">SCHEDULE</span>
-            <h2 id="schedule-heading" className="section-title">Weekly Schedule</h2>
+            <span className="section-tag">ตารางฝึก</span>
+            <h2 id="schedule-heading" className="section-title">แผนประจำสัปดาห์</h2>
           </div>
-          <span className="days-counter">4 Training Days</span>
+          <span className="days-counter">ฝึก 4 วัน</span>
         </div>
 
         {/* Weekday Selector Tabs */}
@@ -64,7 +64,7 @@ export function WeeklySchedule({
               <h3 className="day-thai-title" lang="th">{currentWorkout.titleTh}</h3>
             </div>
             <Link href={`/workout/${currentWorkout.day}`} className="day-quick-start">
-              <span>Start</span>
+              <span>เริ่ม</span>
               <PlayIcon className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -111,7 +111,7 @@ export function WeeklySchedule({
 
           <div className="day-panel-footer">
             <Link href={`/workout/${currentWorkout.day}`} className="view-day-btn">
-              <span>View Full Day {currentWorkout.day} Workout</span>
+              <span>ดูรายละเอียดการฝึกวันที่ {currentWorkout.day}</span>
               <ChevronRightIcon className="w-4 h-4" />
             </Link>
           </div>

@@ -6,9 +6,10 @@ import { PhotoUploadForm } from "@/components/photo-upload-form";
 import { deletePhoto } from "@/app/photos/actions";
 import type { PhotoView } from "@/lib/progress/photos";
 import { CameraIcon } from "@/components/icons";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 const BUCKET = "progress-photos";
-const SIGNED_URL_TTL_SECONDS = 60;
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -94,7 +95,12 @@ export default async function PhotosPage() {
                 <form action={deletePhoto}>
                   <input type="hidden" name="photoId" value={photo.id} />
                   <input type="hidden" name="storagePath" value={photo.storage_path} />
-                  <button type="submit" className="photo-delete">Delete</button>
+                  <ConfirmSubmitButton
+                    className="photo-delete"
+                    message="ลบรูปนี้ถาวรใช่ไหม? การดำเนินการนี้ย้อนกลับไม่ได้"
+                  >
+                    ลบรูป
+                  </ConfirmSubmitButton>
                 </form>
               </li>
             ))}
