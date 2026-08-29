@@ -4,8 +4,7 @@ import { program } from "@/lib/workouts/program";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionDetail } from "@/lib/workouts/session";
 import { RestTimerBar, RestTimerProvider } from "@/components/rest-timer";
-import { finishSession } from "@/app/session/[id]/actions";
-import { CheckCircleIcon, DumbbellIcon, TrophyIcon } from "@/components/icons";
+import { DumbbellIcon } from "@/components/icons";
 import { SessionExerciseList } from "@/components/session-exercise-list";
 
 export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -64,21 +63,6 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         </header>
 
         <SessionExerciseList session={session} workout={workout} />
-
-        {session.completedAt ? (
-          <Link href={`/history/${session.id}`} className="start-button finish-button">
-            <CheckCircleIcon className="w-5 h-5" />
-            <span>View summary</span>
-          </Link>
-        ) : (
-          <form action={finishSession} className="finish-form">
-            <input type="hidden" name="sessionId" value={session.id} />
-            <button type="submit" className="start-button finish-button">
-              <TrophyIcon className="w-5 h-5" />
-              <span>Finish workout</span>
-            </button>
-          </form>
-        )}
       </main>
       <RestTimerBar />
     </RestTimerProvider>

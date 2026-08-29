@@ -113,23 +113,24 @@ export function TrophyIcon({ className = "w-5 h-5", style }: IconProps) {
 
 export function MuscleTagIcon({ name }: { name: string }) {
   const lower = name.toLowerCase();
+  let group = "target";
   if (lower.includes("lat") || lower.includes("back")) {
-    return <span className="muscle-emoji" aria-hidden="true">🦅</span>;
+    group = "back";
   }
-  if (lower.includes("delt") || lower.includes("shoulder")) {
-    return <span className="muscle-emoji" aria-hidden="true">⚡</span>;
+  else if (lower.includes("delt") || lower.includes("shoulder")) {
+    group = "shoulder";
   }
-  if (lower.includes("chest")) {
-    return <span className="muscle-emoji" aria-hidden="true">🛡️</span>;
+  else if (lower.includes("chest")) {
+    group = "chest";
   }
-  if (lower.includes("arm") || lower.includes("bicep") || lower.includes("tricep") || lower.includes("curl")) {
-    return <span className="muscle-emoji" aria-hidden="true">💪</span>;
+  else if (lower.includes("arm") || lower.includes("bicep") || lower.includes("tricep") || lower.includes("curl")) {
+    group = "arms";
   }
-  if (lower.includes("leg") || lower.includes("squat") || lower.includes("lunge") || lower.includes("glute")) {
-    return <span className="muscle-emoji" aria-hidden="true">🦵</span>;
+  else if (lower.includes("leg") || lower.includes("squat") || lower.includes("lunge") || lower.includes("glute")) {
+    group = "legs";
   }
-  if (lower.includes("core") || lower.includes("abs") || lower.includes("crunch") || lower.includes("plank")) {
-    return <span className="muscle-emoji" aria-hidden="true">🔥</span>;
+  else if (lower.includes("core") || lower.includes("abs") || lower.includes("crunch") || lower.includes("plank")) {
+    group = "core";
   }
-  return <span className="muscle-emoji" aria-hidden="true">🎯</span>;
+  return <span className={`muscle-marker muscle-marker-${group}`} aria-hidden="true" />;
 }

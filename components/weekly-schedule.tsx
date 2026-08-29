@@ -6,6 +6,13 @@ import { type WorkoutDay, formatPrescription } from "@/lib/workouts/program";
 import { ChevronRightIcon, MuscleTagIcon, PlayIcon } from "@/components/icons";
 import { ExerciseGuideModal, ExerciseInfoButton } from "@/components/exercise-guide-modal";
 
+const weekdayTh: Record<WorkoutDay["weekday"], string> = {
+  Monday: "จันทร์",
+  Tuesday: "อังคาร",
+  Thursday: "พฤหัส",
+  Saturday: "เสาร์",
+};
+
 export function WeeklySchedule({
   program,
   todayDayNumber,
@@ -23,10 +30,10 @@ export function WeeklySchedule({
       <section className="weekly-schedule-card" aria-labelledby="schedule-heading">
         <div className="schedule-header">
           <div>
-            <span className="section-tag">ตารางฝึก</span>
-            <h2 id="schedule-heading" className="section-title">แผนประจำสัปดาห์</h2>
+            <span className="section-tag">YOUR PROGRAM</span>
+            <h2 id="schedule-heading" className="section-title">แผนฝึกประจำสัปดาห์</h2>
           </div>
-          <span className="days-counter">ฝึก 4 วัน</span>
+          <span className="days-counter"><strong>4</strong> TRAINING DAYS</span>
         </div>
 
         {/* Weekday Selector Tabs */}
@@ -44,8 +51,8 @@ export function WeeklySchedule({
                   className={`day-tab-btn ${isSelected ? "active" : ""} ${isToday ? "today-highlight" : ""}`}
                   onClick={() => setSelectedDay(day.day)}
                 >
-                  <span className="day-tab-weekday">{day.weekday.slice(0, 3)}</span>
-                  <span className="day-tab-day">Day {day.day}</span>
+                  <span className="day-tab-weekday">{weekdayTh[day.weekday]}</span>
+                  <span className="day-tab-day">DAY 0{day.day}</span>
                   {isToday && <span className="today-dot" title="Today's workout" />}
                 </button>
               );
@@ -58,13 +65,13 @@ export function WeeklySchedule({
           <div className="day-detail-top">
             <div>
               <div className="day-badges-row">
-                <span className="day-num-badge">DAY {currentWorkout.day}</span>
-                <span className="day-name-badge">{currentWorkout.weekday}</span>
+                <span className="day-num-badge">DAY 0{currentWorkout.day}</span>
+                <span className="day-name-badge">{weekdayTh[currentWorkout.weekday]}</span>
               </div>
               <h3 className="day-thai-title" lang="th">{currentWorkout.titleTh}</h3>
             </div>
             <Link href={`/workout/${currentWorkout.day}`} className="day-quick-start">
-              <span>เริ่ม</span>
+              <span>เริ่มฝึก</span>
               <PlayIcon className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -111,7 +118,7 @@ export function WeeklySchedule({
 
           <div className="day-panel-footer">
             <Link href={`/workout/${currentWorkout.day}`} className="view-day-btn">
-              <span>ดูรายละเอียดการฝึกวันที่ {currentWorkout.day}</span>
+              <span>ดูโปรแกรม DAY 0{currentWorkout.day} ทั้งหมด</span>
               <ChevronRightIcon className="w-4 h-4" />
             </Link>
           </div>

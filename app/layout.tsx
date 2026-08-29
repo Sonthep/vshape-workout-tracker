@@ -17,20 +17,20 @@ const bodyFont = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "V-Shape Workout Tracker",
-  description: "Mobile-first dumbbell workout tracker",
+  title: "V/SHAPE — Workout Tracker",
+  description: "โปรแกรมสร้างทรง V ด้วยดัมเบล สำหรับฝึกที่บ้าน",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0a0e17",
+  themeColor: "#111827",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
+    <html lang="th" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body>
         <AppHeader />
         {children}

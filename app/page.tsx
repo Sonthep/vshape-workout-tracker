@@ -8,24 +8,26 @@ export default function HomePage() {
 
   return (
     <main className="home-shell">
-      {/* Hero Welcome Banner */}
       <section className="hero-banner" aria-label="Welcome">
         <div className="hero-title-group">
           <div className="hero-badge-pill">
             <FireIcon className="w-3.5 h-3.5" />
-            <span>ฝึก 4 วันต่อสัปดาห์</span>
+            <span>HOME TRAINING / 4 DAYS</span>
           </div>
-          <h1>โปรแกรมออกกำลังกาย</h1>
-          <p className="muted">ฝึกง่ายด้วยดัมเบล พื้น และน้ำหนักตัว</p>
+          <h1>สร้างทรง<br /><span>V-SHAPE</span></h1>
+          <p className="hero-copy">โปรแกรมกระชับ เข้าใจง่าย และทำได้จริง<br />ด้วยดัมเบลคู่เดียวที่บ้าน</p>
+        </div>
+        <div className="hero-monogram" aria-hidden="true">V</div>
+        <div className="hero-plan-strip" aria-label="รายละเอียดโปรแกรม">
+          <span><strong>04</strong> วันฝึก</span>
+          <span><strong>30–50</strong> นาที</span>
+          <span><strong>01</strong> เป้าหมาย</span>
         </div>
       </section>
 
-      {/* Primary Next Workout Card with Exercise Guide Modal Support */}
       <NextWorkoutCard workout={workout} />
 
-      {/* Interactive Weekly Schedule with Guide Support */}
       <WeeklySchedule program={program} todayDayNumber={workout.day} />
-
     </main>
   );
 }

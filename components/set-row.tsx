@@ -30,6 +30,7 @@ export function SetRow({
   previousLog,
   exerciseName,
   restSeconds,
+  onCompleted,
 }: {
   sessionId: string;
   workoutExerciseId: string;
@@ -39,6 +40,7 @@ export function SetRow({
   previousLog: SetLog | undefined;
   exerciseName: string;
   restSeconds: number;
+  onCompleted?: () => void;
 }) {
   const { start } = useRestTimer();
   const previousHint = formatPreviousSetHint(previousLog, isDuration);
@@ -97,6 +99,7 @@ export function SetRow({
 
   async function completeSet(formData: FormData) {
     await logSet(formData);
+    onCompleted?.();
     start(restSeconds, exerciseName);
   }
 

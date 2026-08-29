@@ -8,6 +8,7 @@ Show the next workout first. Secondary information: weekly completion and latest
 
 ## Workout mode
 - One-handed, thumb-friendly controls.
+- Show one exercise at a time. Provide numbered exercise navigation, previous/next controls, and resume at the first incomplete exercise.
 - Large exercise name and current set number.
 - Show previous session values directly next to the input.
 - Primary button: Complete Set.
