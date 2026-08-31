@@ -41,14 +41,13 @@ export default async function PhotosPage() {
   if (error) throw new Error(error.message);
 
   const rows = (data ?? []) as PhotoRow[];
-  const photos = await Promise.all(
-    rows.map(async (row) => {
-      const { data: signed } = await supabase.storage
+  const { data: signedUrls } = rows.length
+    ? await supabase.storage
         .from(BUCKET)
-        .createSignedUrl(row.storage_path, SIGNED_URL_TTL_SECONDS);
-      return { ...row, signedUrl: signed?.signedUrl ?? null };
-    }),
-  );
+        .createSignedUrls(rows.map((row) => row.storage_path), SIGNED_URL_TTL_SECONDS)
+    : { data: [] };
+  const signedUrlByPath = new Map((signedUrls ?? []).map((s) => [s.path, s.signedUrl]));
+  const photos = rows.map((row) => ({ ...row, signedUrl: signedUrlByPath.get(row.storage_path) ?? null }));
 
   return (
     <main className="home-shell">
@@ -94,7 +93,6 @@ export default async function PhotosPage() {
                 </div>
                 <form action={deletePhoto}>
                   <input type="hidden" name="photoId" value={photo.id} />
-                  <input type="hidden" name="storagePath" value={photo.storage_path} />
                   <ConfirmSubmitButton
                     className="photo-delete"
                     message="ลบรูปนี้ถาวรใช่ไหม? การดำเนินการนี้ย้อนกลับไม่ได้"
