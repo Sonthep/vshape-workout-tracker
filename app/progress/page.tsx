@@ -5,6 +5,7 @@ import { MeasurementForm } from "@/components/measurement-form";
 import { TrendChart } from "@/components/trend-chart";
 import type { BodyMeasurement } from "@/lib/domain/types";
 import type { TrendPoint } from "@/lib/progress/measurements";
+import { isoDateInTimeZone } from "@/lib/date";
 
 
 function formatDate(value: string): string {
@@ -12,7 +13,7 @@ function formatDate(value: string): string {
 }
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return isoDateInTimeZone();
 }
 
 function toTrendPoints(measurements: BodyMeasurement[], pick: (m: BodyMeasurement) => number | null): TrendPoint[] {

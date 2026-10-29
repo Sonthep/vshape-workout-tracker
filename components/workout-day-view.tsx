@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { type WorkoutDay, formatPrescription } from "@/lib/workouts/program";
 import { ExerciseGuideModal, ExerciseInfoButton } from "@/components/exercise-guide-modal";
 import { PlayIcon } from "@/components/icons";
@@ -22,11 +23,12 @@ export function WorkoutDayView({
             <div className="exercise-row-info">
               <span className="exercise-badge-num">{index + 1}</span>
               <div className="exercise-thumb-wrap">
-                <img
+                <Image
                   src={`/exercises/${exercise.id}.jpg`}
                   alt={exercise.name}
                   className="exercise-thumb-img"
-                  loading="lazy"
+                  width={44}
+                  height={44}
                 />
               </div>
               <div className="exercise-name-wrap">

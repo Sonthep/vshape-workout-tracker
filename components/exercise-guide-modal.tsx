@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { type ExerciseGuide, getExerciseGuide } from "@/lib/workouts/exercise-guides";
 import { DumbbellIcon, FireIcon, MuscleTagIcon } from "@/components/icons";
 import { ExerciseIllustration } from "@/components/exercise-illustrations";
@@ -128,20 +129,23 @@ export function ExerciseGuideModal({
           {isMediaExpanded ? <div className="guide-media-view">
             {mediaMode === "photo" ? (
               <div className="guide-photo-wrap">
-                <img
+                <Image
                   src={guide.imageUrl ?? `/exercises/${guide.id}.jpg`}
                   alt={`${guide.name} visual demonstration`}
                   className="guide-photo-img"
-                  loading="eager"
+                  fill
+                  sizes="(max-width: 520px) 92vw, 640px"
+                  priority
                 />
               </div>
             ) : guide.diagramUrl ? (
               <div className="guide-photo-wrap guide-diagram-photo-wrap">
-                <img
+                <Image
                   src={guide.diagramUrl}
                   alt={`${guide.name} biomechanical diagram infographic`}
                   className="guide-photo-img"
-                  loading="eager"
+                  fill
+                  sizes="(max-width: 520px) 92vw, 640px"
                 />
               </div>
             ) : (

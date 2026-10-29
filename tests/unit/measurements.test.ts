@@ -26,6 +26,7 @@ describe("isValidMeasurementDate", () => {
     expect(isValidMeasurementDate("", today)).toBe(false);
     expect(isValidMeasurementDate("not-a-date", today)).toBe(false);
     expect(isValidMeasurementDate("2026-13-40", today)).toBe(false);
+    expect(isValidMeasurementDate("2026-02-31", today)).toBe(false);
   });
 });
 

@@ -6,7 +6,9 @@ import {
   indexPreviousSetLogsByExercise,
   indexSetLogsByWorkoutExercise,
   isDurationExercise,
+  isBodyweightExercise,
   parseNullableNumber,
+  validateSetInput,
 } from "@/lib/workouts/session";
 
 function makeSetLog(overrides: Partial<SetLog>): SetLog {
@@ -30,6 +32,14 @@ describe("isDurationExercise", () => {
 
   it("treats an exercise without a target duration as rep-based", () => {
     expect(isDurationExercise({ targetSecondsMin: null })).toBe(false);
+  });
+});
+
+describe("isBodyweightExercise", () => {
+  it("distinguishes bodyweight movements from loaded dumbbell movements", () => {
+    expect(isBodyweightExercise("push-up")).toBe(true);
+    expect(isBodyweightExercise("reverse-crunch")).toBe(true);
+    expect(isBodyweightExercise("floor-press")).toBe(false);
   });
 });
 
@@ -100,12 +110,17 @@ describe("formatPreviousSetHint", () => {
 
   it("formats a rep-based hint with weight, reps, and RIR", () => {
     const log = makeSetLog({ weightKg: 20, reps: 10, rir: 2 });
-    expect(formatPreviousSetHint(log, false)).toBe("Last: 20 kg × 10 reps (RIR 2)");
+    expect(formatPreviousSetHint(log, false)).toBe("20 kg × 10 reps (RIR 2)");
   });
 
   it("formats a duration-based hint", () => {
     const log = makeSetLog({ durationSeconds: 45 });
-    expect(formatPreviousSetHint(log, true)).toBe("Last: 45 sec");
+    expect(formatPreviousSetHint(log, true)).toBe("45 sec");
+  });
+
+  it("omits external weight for a bodyweight movement", () => {
+    const log = makeSetLog({ weightKg: 10, reps: 12, rir: 2 });
+    expect(formatPreviousSetHint(log, false, false)).toBe("12 reps (RIR 2)");
   });
 
   it("returns null when a duration hint has no recorded duration", () => {
@@ -132,5 +147,23 @@ describe("formatSetValue", () => {
   it("formats a completed duration-based set", () => {
     const log = makeSetLog({ durationSeconds: 45, completedAt: "2026-01-01T00:00:00Z" });
     expect(formatSetValue(log, true)).toBe("45 sec");
+  });
+});
+
+describe("validateSetInput", () => {
+  const validRepSet = { setNumber: 1, weightKg: 10, reps: 10, durationSeconds: null, rir: 2 };
+
+  it("accepts a valid rep set", () => {
+    expect(validateSetInput(validRepSet, { targetSets: 3, isDuration: false })).toBeNull();
+  });
+
+  it("rejects out-of-range sets and invalid reps", () => {
+    expect(validateSetInput({ ...validRepSet, setNumber: 4 }, { targetSets: 3, isDuration: false })).toBe("Invalid set number.");
+    expect(validateSetInput({ ...validRepSet, reps: -1 }, { targetSets: 3, isDuration: false })).toBe("Reps must be a positive whole number.");
+  });
+
+  it("requires a positive whole duration for timed exercises", () => {
+    expect(validateSetInput({ ...validRepSet, durationSeconds: 30 }, { targetSets: 3, isDuration: true })).toBeNull();
+    expect(validateSetInput({ ...validRepSet, durationSeconds: 0 }, { targetSets: 3, isDuration: true })).toBe("Duration must be a positive whole number.");
   });
 });

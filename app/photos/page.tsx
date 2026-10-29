@@ -7,6 +7,7 @@ import { deletePhoto } from "@/app/photos/actions";
 import type { PhotoView } from "@/lib/progress/photos";
 import { CameraIcon } from "@/components/icons";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { isoDateInTimeZone } from "@/lib/date";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -16,7 +17,7 @@ function formatDate(value: string): string {
 }
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return isoDateInTimeZone();
 }
 
 type PhotoRow = {

@@ -50,6 +50,17 @@ export function isDurationExercise(exercise: { targetSecondsMin: number | null }
   return exercise.targetSecondsMin !== null;
 }
 
+const BODYWEIGHT_EXERCISE_IDS = new Set([
+  "push-up",
+  "reverse-crunch",
+  "leg-raise",
+  "plank",
+]);
+
+export function isBodyweightExercise(exerciseId: string): boolean {
+  return BODYWEIGHT_EXERCISE_IDS.has(exerciseId);
+}
+
 function mapSetLogRow(row: SetLogRow): SetLog {
   return {
     id: row.id,
@@ -105,6 +116,37 @@ export function parseNullableNumber(value: FormDataEntryValue | null): number | 
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export type SetInput = {
+  setNumber: number;
+  weightKg: number | null;
+  reps: number | null;
+  durationSeconds: number | null;
+  rir: number | null;
+};
+
+export function validateSetInput(
+  input: SetInput,
+  exercise: { targetSets: number; isDuration: boolean },
+): string | null {
+  if (!Number.isInteger(input.setNumber) || input.setNumber < 1 || input.setNumber > exercise.targetSets) {
+    return "Invalid set number.";
+  }
+  if (input.rir !== null && (!Number.isInteger(input.rir) || input.rir < 0 || input.rir > 5)) {
+    return "RIR must be a whole number from 0 to 5.";
+  }
+  if (exercise.isDuration) {
+    if (input.durationSeconds === null || !Number.isInteger(input.durationSeconds) || input.durationSeconds <= 0) {
+      return "Duration must be a positive whole number.";
+    }
+  } else {
+    if (input.reps === null || !Number.isInteger(input.reps) || input.reps <= 0) {
+      return "Reps must be a positive whole number.";
+    }
+    if (input.weightKg !== null && input.weightKg < 0) return "Weight cannot be negative.";
+  }
+  return null;
+}
+
 export function formatSetValue(log: SetLog | undefined, isDuration: boolean): string {
   if (!log || log.completedAt === null) return "—";
   if (isDuration) return log.durationSeconds !== null ? `${log.durationSeconds} sec` : "—";
@@ -117,16 +159,20 @@ export function formatSetValue(log: SetLog | undefined, isDuration: boolean): st
   return value;
 }
 
-export function formatPreviousSetHint(log: SetLog | undefined, isDuration: boolean): string | null {
+export function formatPreviousSetHint(
+  log: SetLog | undefined,
+  isDuration: boolean,
+  includeWeight = true,
+): string | null {
   if (!log) return null;
   if (isDuration) {
-    return log.durationSeconds !== null ? `Last: ${log.durationSeconds} sec` : null;
+    return log.durationSeconds !== null ? `${log.durationSeconds} sec` : null;
   }
   const parts: string[] = [];
-  if (log.weightKg !== null) parts.push(`${log.weightKg} kg`);
+  if (includeWeight && log.weightKg !== null) parts.push(`${log.weightKg} kg`);
   if (log.reps !== null) parts.push(`${log.reps} reps`);
   if (parts.length === 0) return null;
-  let hint = `Last: ${parts.join(" × ")}`;
+  let hint = parts.join(" × ");
   if (log.rir !== null) hint += ` (RIR ${log.rir})`;
   return hint;
 }
@@ -165,6 +211,20 @@ export async function findOrCreateSession(
     .select("id")
     .single();
 
+  if (sessionError?.code === "23505") {
+    const { data: concurrentSession, error: concurrentError } = await supabase
+      .from("workout_sessions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("program_day", day)
+      .is("completed_at", null)
+      .single();
+    if (concurrentError || !concurrentSession) {
+      throw new Error(concurrentError?.message ?? "Failed to load the active session");
+    }
+    return { id: concurrentSession.id };
+  }
+
   if (sessionError || !session) {
     throw new Error(sessionError?.message ?? "Failed to start session");
   }
@@ -181,7 +241,10 @@ export async function findOrCreateSession(
   }));
 
   const { error: exercisesError } = await supabase.from("workout_exercises").insert(exerciseRows);
-  if (exercisesError) throw new Error(exercisesError.message);
+  if (exercisesError) {
+    await supabase.from("workout_sessions").delete().eq("id", session.id).eq("user_id", userId);
+    throw new Error(exercisesError.message);
+  }
 
   return { id: session.id };
 }

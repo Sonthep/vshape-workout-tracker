@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { parseNullableNumber } from "@/lib/workouts/session";
+import { isBodyweightExercise, parseNullableNumber, validateSetInput } from "@/lib/workouts/session";
 
 export async function logSet(formData: FormData) {
   const supabase = await createClient();
@@ -16,14 +16,52 @@ export async function logSet(formData: FormData) {
   const workoutExerciseId = String(formData.get("workoutExerciseId"));
   const setNumber = Number(formData.get("setNumber"));
 
+  const input = {
+    setNumber,
+    weightKg: parseNullableNumber(formData.get("weightKg")),
+    reps: parseNullableNumber(formData.get("reps")),
+    durationSeconds: parseNullableNumber(formData.get("durationSeconds")),
+    rir: parseNullableNumber(formData.get("rir")),
+  };
+
+  const { data: exercise, error: exerciseError } = await supabase
+    .from("workout_exercises")
+    .select("exercise_id, target_sets, target_seconds_min, workout_sessions!inner(user_id, completed_at)")
+    .eq("id", workoutExerciseId)
+    .eq("session_id", sessionId)
+    .eq("workout_sessions.user_id", user.id)
+    .maybeSingle();
+  if (exerciseError) throw new Error(exerciseError.message);
+  if (!exercise) throw new Error("Workout exercise not found.");
+
+  const session = Array.isArray(exercise.workout_sessions)
+    ? exercise.workout_sessions[0]
+    : exercise.workout_sessions;
+  if (session?.completed_at) throw new Error("This workout has already been completed.");
+
+  if (isBodyweightExercise(exercise.exercise_id)) input.weightKg = null;
+
+  const validationError = validateSetInput(input, {
+    targetSets: exercise.target_sets,
+    isDuration: exercise.target_seconds_min !== null,
+  });
+  if (validationError) throw new Error(validationError);
+
+  const { data: existingLog } = await supabase
+    .from("set_logs")
+    .select("completed_at")
+    .eq("workout_exercise_id", workoutExerciseId)
+    .eq("set_number", setNumber)
+    .maybeSingle();
+
   const { error } = await supabase.from("set_logs").upsert(
     {
       workout_exercise_id: workoutExerciseId,
       set_number: setNumber,
-      weight_kg: parseNullableNumber(formData.get("weightKg")),
-      reps: parseNullableNumber(formData.get("reps")),
-      duration_seconds: parseNullableNumber(formData.get("durationSeconds")),
-      rir: parseNullableNumber(formData.get("rir")),
+      weight_kg: input.weightKg,
+      reps: input.reps,
+      duration_seconds: input.durationSeconds,
+      rir: input.rir,
       completed_at: new Date().toISOString(),
     },
     { onConflict: "workout_exercise_id,set_number" },
@@ -32,6 +70,7 @@ export async function logSet(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/session/${sessionId}`);
+  return { shouldStartRest: existingLog?.completed_at == null };
 }
 
 export async function finishSession(formData: FormData) {
@@ -42,6 +81,28 @@ export async function finishSession(formData: FormData) {
   if (!user) redirect("/login");
 
   const sessionId = String(formData.get("sessionId"));
+
+  const { data: exercises, error: exercisesError } = await supabase
+    .from("workout_exercises")
+    .select("id, target_sets, workout_sessions!inner(user_id)")
+    .eq("session_id", sessionId)
+    .eq("workout_sessions.user_id", user.id);
+  if (exercisesError) throw new Error(exercisesError.message);
+  if (!exercises?.length) throw new Error("Workout session not found.");
+
+  const { data: completedLogs, error: logsError } = await supabase
+    .from("set_logs")
+    .select("workout_exercise_id, set_number")
+    .in("workout_exercise_id", exercises.map((exercise) => exercise.id))
+    .not("completed_at", "is", null);
+  if (logsError) throw new Error(logsError.message);
+  const completedKeys = new Set((completedLogs ?? []).map((log) => `${log.workout_exercise_id}:${log.set_number}`));
+  const isComplete = exercises.every((exercise) =>
+    Array.from({ length: exercise.target_sets }, (_, index) => index + 1).every(
+      (setNumberValue) => completedKeys.has(`${exercise.id}:${setNumberValue}`),
+    ),
+  );
+  if (!isComplete) throw new Error("Complete every set before finishing the workout.");
 
   const { error } = await supabase
     .from("workout_sessions")

@@ -21,6 +21,16 @@ describe("workout program", () => {
     expect(coreDays).toHaveLength(2);
   });
 
+  it("keeps beginner-friendly session volume and prioritizes V-shape muscles", () => {
+    expect(program.every((day) => day.exercises.length <= 7)).toBe(true);
+    expect(program[0].exercises.map((exercise) => exercise.id)).toContain("lateral-raise");
+    expect(program[2].exercises.map((exercise) => exercise.id)).toEqual(expect.arrayContaining([
+      "one-arm-lat-row",
+      "lateral-raise",
+      "rear-delt-fly",
+    ]));
+  });
+
   it("keeps today's workout available and otherwise finds the next training day", () => {
     expect(getNextWorkout(new Date("2026-08-24T12:00:00"))).toMatchObject({ weekday: "Monday" });
     expect(getNextWorkout(new Date("2026-08-26T12:00:00"))).toMatchObject({ weekday: "Thursday" });
@@ -28,7 +38,7 @@ describe("workout program", () => {
   });
 
   it("formats rep, duration, and per-side prescriptions clearly", () => {
-    expect(formatPrescription(program[0].exercises[1])).toBe("3 sets × 10–15 reps / side");
-    expect(formatPrescription(program[1].exercises[6])).toBe("2 sets × 30–60 sec");
+    expect(formatPrescription(program[0].exercises[0])).toBe("3 sets × 8–12 reps / side");
+    expect(formatPrescription(program[1].exercises[5])).toBe("2 sets × 30–60 sec");
   });
 });

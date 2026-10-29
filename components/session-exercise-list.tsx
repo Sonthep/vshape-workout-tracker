@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { SessionDetail } from "@/lib/workouts/session";
 import { type WorkoutDay, formatPrescription } from "@/lib/workouts/program";
-import { isDurationExercise } from "@/lib/workouts/session";
+import { isBodyweightExercise, isDurationExercise } from "@/lib/workouts/session";
 import { getDefaultRestSeconds } from "@/lib/workouts/rest";
 import { SetRow } from "@/components/set-row";
 import { ExerciseGuideModal, ExerciseInfoButton } from "@/components/exercise-guide-modal";
@@ -54,6 +55,11 @@ export function SessionExerciseList({
   const exerciseComplete = completedSets === exercise.targetSets;
   const isFirstExercise = activeIndex === 0;
   const isLastExercise = activeIndex === session.exercises.length - 1;
+  const allExercisesComplete = session.exercises.every((item) =>
+    Array.from({ length: item.targetSets }, (_, index) => index + 1).every(
+      (setNumber) => item.setLogs[setNumber]?.completedAt != null || locallyCompletedSets.has(`${item.id}:${setNumber}`),
+    ),
+  );
 
   function markSetCompleted(setNumber: number) {
     setLocallyCompletedSets((current) => {
@@ -98,11 +104,12 @@ export function SessionExerciseList({
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <span className="exercise-badge-num">{activeIndex + 1}</span>
                   <div className="exercise-thumb-wrap">
-                    <img
+                    <Image
                       src={`/exercises/${exercise.exerciseId}.jpg`}
                       alt={exercise.name}
                       className="exercise-thumb-img"
-                      loading="lazy"
+                      width={44}
+                      height={44}
                     />
                   </div>
                   <h2>{exercise.name}</h2>
@@ -127,6 +134,7 @@ export function SessionExerciseList({
                       workoutExerciseId={exercise.id}
                       setNumber={setNumber}
                       isDuration={duration}
+                      isBodyweight={isBodyweightExercise(exercise.exerciseId)}
                       log={exercise.setLogs[setNumber]}
                       previousLog={exercise.previousSets[setNumber]}
                       exerciseName={exercise.name}
@@ -165,7 +173,12 @@ export function SessionExerciseList({
           ) : (
             <form action={finishSession}>
               <input type="hidden" name="sessionId" value={session.id} />
-              <button type="submit" className="exercise-nav-button primary">
+              <button
+                type="submit"
+                className="exercise-nav-button primary"
+                disabled={!allExercisesComplete}
+                title={!allExercisesComplete ? "Complete every set before finishing" : undefined}
+              >
                 <TrophyIcon className="w-4 h-4" /> จบการฝึก
               </button>
             </form>

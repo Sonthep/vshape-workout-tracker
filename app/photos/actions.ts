@@ -61,17 +61,23 @@ export async function deletePhoto(formData: FormData) {
 
   const photoId = String(formData.get("photoId"));
 
-  const { data: deletedRow, error: deleteRowError } = await supabase
+  const { data: photo, error: photoError } = await supabase
+    .from("progress_photos")
+    .select("storage_path")
+    .eq("id", photoId)
+    .eq("user_id", user.id)
+    .single();
+  if (photoError) throw new Error(photoError.message);
+
+  const { error: removeError } = await supabase.storage.from(BUCKET).remove([photo.storage_path]);
+  if (removeError) throw new Error(removeError.message);
+
+  const { error: deleteRowError } = await supabase
     .from("progress_photos")
     .delete()
     .eq("id", photoId)
-    .eq("user_id", user.id)
-    .select("storage_path")
-    .single();
+    .eq("user_id", user.id);
   if (deleteRowError) throw new Error(deleteRowError.message);
-
-  const { error: removeError } = await supabase.storage.from(BUCKET).remove([deletedRow.storage_path]);
-  if (removeError) throw new Error(removeError.message);
 
   revalidatePath("/photos");
 }

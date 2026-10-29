@@ -26,6 +26,7 @@ export function SetRow({
   workoutExerciseId,
   setNumber,
   isDuration,
+  isBodyweight,
   log,
   previousLog,
   exerciseName,
@@ -36,6 +37,7 @@ export function SetRow({
   workoutExerciseId: string;
   setNumber: number;
   isDuration: boolean;
+  isBodyweight: boolean;
   log: SetLog | undefined;
   previousLog: SetLog | undefined;
   exerciseName: string;
@@ -43,7 +45,7 @@ export function SetRow({
   onCompleted?: () => void;
 }) {
   const { start } = useRestTimer();
-  const previousHint = formatPreviousSetHint(previousLog, isDuration);
+  const previousHint = formatPreviousSetHint(previousLog, isDuration, !isBodyweight);
   const isCompleted = log?.completedAt != null;
 
   // Local state for interactive steppers while keeping inputs controlled/uncontrolled for form submit
@@ -98,9 +100,9 @@ export function SetRow({
   }
 
   async function completeSet(formData: FormData) {
-    await logSet(formData);
+    const result = await logSet(formData);
     onCompleted?.();
-    start(restSeconds, exerciseName);
+    if (result.shouldStartRest) start(restSeconds, exerciseName);
   }
 
   return (
@@ -154,37 +156,39 @@ export function SetRow({
             </label>
           ) : (
             <>
-              <label className="set-field">
-                <span>Weight (kg)</span>
-                <div className="stepper-input-wrap">
-                  <button
-                    type="button"
-                    className="stepper-btn"
-                    onClick={() => adjustWeight(-1)}
-                    aria-label="Decrease weight"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    name="weightKg"
-                    min={0}
-                    step={0.5}
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder={previousLog?.weightKg?.toString() ?? "10"}
-                  />
-                  <button
-                    type="button"
-                    className="stepper-btn"
-                    onClick={() => adjustWeight(1)}
-                    aria-label="Increase weight"
-                  >
-                    +
-                  </button>
-                </div>
-              </label>
+              {!isBodyweight ? (
+                <label className="set-field">
+                  <span>Weight (kg)</span>
+                  <div className="stepper-input-wrap">
+                    <button
+                      type="button"
+                      className="stepper-btn"
+                      onClick={() => adjustWeight(-1)}
+                      aria-label="Decrease weight"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      name="weightKg"
+                      min={0}
+                      step={0.5}
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      placeholder={previousLog?.weightKg?.toString() ?? "10"}
+                    />
+                    <button
+                      type="button"
+                      className="stepper-btn"
+                      onClick={() => adjustWeight(1)}
+                      aria-label="Increase weight"
+                    >
+                      +
+                    </button>
+                  </div>
+                </label>
+              ) : null}
 
               <label className="set-field">
                 <span>Reps</span>

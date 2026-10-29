@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { type WorkoutDay, formatPrescription } from "@/lib/workouts/program";
 import { ChevronRightIcon, MuscleTagIcon, PlayIcon } from "@/components/icons";
@@ -93,11 +94,12 @@ export function WeeklySchedule({
                 <div className="schedule-exercise-left">
                   <span className="exercise-idx">{idx + 1}</span>
                   <div className="exercise-thumb-wrap" style={{ width: 38, height: 38 }}>
-                    <img
+                    <Image
                       src={`/exercises/${exercise.id}.jpg`}
                       alt={exercise.name}
                       className="exercise-thumb-img"
-                      loading="lazy"
+                      width={38}
+                      height={38}
                     />
                   </div>
                   <div>

@@ -1,10 +1,11 @@
-import { getNextWorkout, program } from "@/lib/workouts/program";
+import { getNextWorkoutForWeekday, program } from "@/lib/workouts/program";
+import { weekdayInTimeZone } from "@/lib/date";
 import { WeeklySchedule } from "@/components/weekly-schedule";
 import { NextWorkoutCard } from "@/components/next-workout-card";
 import { FireIcon } from "@/components/icons";
 
 export default function HomePage() {
-  const workout = getNextWorkout(new Date());
+  const workout = getNextWorkoutForWeekday(weekdayInTimeZone(new Date()));
 
   return (
     <main className="home-shell">
