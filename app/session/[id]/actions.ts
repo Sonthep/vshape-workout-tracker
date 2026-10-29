@@ -5,12 +5,16 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isBodyweightExercise, parseNullableNumber, validateSetInput } from "@/lib/workouts/session";
 
-export async function logSet(formData: FormData) {
+export type LogSetResult =
+  | { error: string; shouldStartRest?: never }
+  | { error: null; shouldStartRest: boolean };
+
+export async function logSet(formData: FormData): Promise<LogSetResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) return { error: "กรุณาเข้าสู่ระบบอีกครั้งก่อนบันทึก" };
 
   const sessionId = String(formData.get("sessionId"));
   const workoutExerciseId = String(formData.get("workoutExerciseId"));
@@ -31,13 +35,13 @@ export async function logSet(formData: FormData) {
     .eq("session_id", sessionId)
     .eq("workout_sessions.user_id", user.id)
     .maybeSingle();
-  if (exerciseError) throw new Error(exerciseError.message);
-  if (!exercise) throw new Error("Workout exercise not found.");
+  if (exerciseError) return { error: "โหลดข้อมูลท่าไม่สำเร็จ กรุณาลองอีกครั้ง" };
+  if (!exercise) return { error: "ไม่พบท่าในเซสชันนี้ กรุณารีเฟรชหน้า" };
 
   const session = Array.isArray(exercise.workout_sessions)
     ? exercise.workout_sessions[0]
     : exercise.workout_sessions;
-  if (session?.completed_at) throw new Error("This workout has already been completed.");
+  if (session?.completed_at) return { error: "เซสชันนี้จบแล้ว ไม่สามารถบันทึกเพิ่มได้" };
 
   if (isBodyweightExercise(exercise.exercise_id)) input.weightKg = null;
 
@@ -45,14 +49,16 @@ export async function logSet(formData: FormData) {
     targetSets: exercise.target_sets,
     isDuration: exercise.target_seconds_min !== null,
   });
-  if (validationError) throw new Error(validationError);
+  if (validationError) return { error: validationError };
 
-  const { data: existingLog } = await supabase
+  const { data: existingLog, error: existingError } = await supabase
     .from("set_logs")
     .select("completed_at")
     .eq("workout_exercise_id", workoutExerciseId)
     .eq("set_number", setNumber)
     .maybeSingle();
+
+  if (existingError) return { error: "ตรวจสอบเซตเดิมไม่สำเร็จ กรุณาลองอีกครั้ง" };
 
   const { error } = await supabase.from("set_logs").upsert(
     {
@@ -67,10 +73,10 @@ export async function logSet(formData: FormData) {
     { onConflict: "workout_exercise_id,set_number" },
   );
 
-  if (error) throw new Error(error.message);
+  if (error) return { error: "บันทึกเซตไม่สำเร็จ กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง" };
 
   revalidatePath(`/session/${sessionId}`);
-  return { shouldStartRest: existingLog?.completed_at == null };
+  return { error: null, shouldStartRest: existingLog?.completed_at == null };
 }
 
 export async function finishSession(formData: FormData) {

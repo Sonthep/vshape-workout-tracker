@@ -8,6 +8,13 @@ import { logSet } from "@/app/session/[id]/actions";
 import { useRestTimer } from "@/components/rest-timer";
 import { CheckCircleIcon } from "@/components/icons";
 
+function getInitialReps(...values: (number | null | undefined)[]): string {
+  const reps = values.find((value): value is number =>
+    value !== null && value !== undefined && Number.isInteger(value) && value > 0
+  );
+  return reps === undefined ? "" : String(reps);
+}
+
 function CompleteSetButton({ isCompleted }: { isCompleted: boolean }) {
   const { pending } = useFormStatus();
   return (
@@ -27,6 +34,7 @@ export function SetRow({
   setNumber,
   isDuration,
   isBodyweight,
+  targetRepMin,
   log,
   previousLog,
   exerciseName,
@@ -38,6 +46,7 @@ export function SetRow({
   setNumber: number;
   isDuration: boolean;
   isBodyweight: boolean;
+  targetRepMin: number | null;
   log: SetLog | undefined;
   previousLog: SetLog | undefined;
   exerciseName: string;
@@ -45,6 +54,7 @@ export function SetRow({
   onCompleted?: () => void;
 }) {
   const { start } = useRestTimer();
+  const [error, setError] = useState<string | null>(null);
   const previousHint = formatPreviousSetHint(previousLog, isDuration, !isBodyweight);
   const isCompleted = log?.completedAt != null;
 
@@ -57,13 +67,7 @@ export function SetRow({
       : ""
   );
 
-  const [reps, setReps] = useState<string>(
-    log?.reps !== undefined && log?.reps !== null
-      ? String(log.reps)
-      : previousLog?.reps !== undefined && previousLog?.reps !== null
-      ? String(previousLog.reps)
-      : ""
-  );
+  const [reps, setReps] = useState(() => getInitialReps(log?.reps, previousLog?.reps, targetRepMin));
 
   const [duration, setDuration] = useState<string>(
     log?.durationSeconds !== undefined && log?.durationSeconds !== null
@@ -89,18 +93,29 @@ export function SetRow({
 
   function adjustReps(delta: number) {
     const current = parseInt(reps, 10) || 0;
-    const next = Math.max(0, current + delta);
+    const next = Math.max(1, current + delta);
     setReps(next.toString());
   }
 
   function adjustDuration(delta: number) {
     const current = parseInt(duration, 10) || 0;
-    const next = Math.max(0, current + delta);
+    const next = Math.max(1, current + delta);
     setDuration(next.toString());
   }
 
   async function completeSet(formData: FormData) {
-    const result = await logSet(formData);
+    setError(null);
+    let result;
+    try {
+      result = await logSet(formData);
+    } catch {
+      setError("เชื่อมต่อไม่สำเร็จ ข้อมูลยังอยู่ กรุณาลองบันทึกอีกครั้ง");
+      return;
+    }
+    if (result.error !== null) {
+      setError(result.error);
+      return;
+    }
     onCompleted?.();
     if (result.shouldStartRest) start(restSeconds, exerciseName);
   }
@@ -139,10 +154,12 @@ export function SetRow({
                   type="number"
                   inputMode="numeric"
                   name="durationSeconds"
-                  min={0}
+                  min={1}
+                  step={1}
+                  required
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  placeholder={previousLog?.durationSeconds?.toString() ?? "30"}
+                  placeholder="กรอกวินาที"
                 />
                 <button
                   type="button"
@@ -205,10 +222,12 @@ export function SetRow({
                     type="number"
                     inputMode="numeric"
                     name="reps"
-                    min={0}
+                    min={1}
+                    step={1}
+                    required
                     value={reps}
                     onChange={(e) => setReps(e.target.value)}
-                    placeholder={previousLog?.reps?.toString() ?? "10"}
+                    placeholder="กรอกครั้ง"
                   />
                   <button
                     type="button"
@@ -248,6 +267,7 @@ export function SetRow({
           </div>
         ) : null}
 
+        {error ? <p className="error-message" role="alert">{error}</p> : null}
         <CompleteSetButton isCompleted={isCompleted} />
       </form>
     </li>
