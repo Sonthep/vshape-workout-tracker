@@ -14,7 +14,7 @@ export async function logSet(formData: FormData): Promise<LogSetResult> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "กรุณาเข้าสู่ระบบอีกครั้งก่อนบันทึก" };
+  if (!user) redirect("/login");
 
   const sessionId = String(formData.get("sessionId"));
   const workoutExerciseId = String(formData.get("workoutExerciseId"));
@@ -35,7 +35,10 @@ export async function logSet(formData: FormData): Promise<LogSetResult> {
     .eq("session_id", sessionId)
     .eq("workout_sessions.user_id", user.id)
     .maybeSingle();
-  if (exerciseError) return { error: "โหลดข้อมูลท่าไม่สำเร็จ กรุณาลองอีกครั้ง" };
+  if (exerciseError) {
+    console.error("logSet: load workout_exercise failed", exerciseError);
+    return { error: "โหลดข้อมูลท่าไม่สำเร็จ กรุณาลองอีกครั้ง" };
+  }
   if (!exercise) return { error: "ไม่พบท่าในเซสชันนี้ กรุณารีเฟรชหน้า" };
 
   const session = Array.isArray(exercise.workout_sessions)
@@ -58,7 +61,10 @@ export async function logSet(formData: FormData): Promise<LogSetResult> {
     .eq("set_number", setNumber)
     .maybeSingle();
 
-  if (existingError) return { error: "ตรวจสอบเซตเดิมไม่สำเร็จ กรุณาลองอีกครั้ง" };
+  if (existingError) {
+    console.error("logSet: check existing set_log failed", existingError);
+    return { error: "ตรวจสอบเซตเดิมไม่สำเร็จ กรุณาลองอีกครั้ง" };
+  }
 
   const { error } = await supabase.from("set_logs").upsert(
     {
@@ -73,7 +79,10 @@ export async function logSet(formData: FormData): Promise<LogSetResult> {
     { onConflict: "workout_exercise_id,set_number" },
   );
 
-  if (error) return { error: "บันทึกเซตไม่สำเร็จ กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง" };
+  if (error) {
+    console.error("logSet: upsert set_log failed", error);
+    return { error: "บันทึกเซตไม่สำเร็จ กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง" };
+  }
 
   revalidatePath(`/session/${sessionId}`);
   return { error: null, shouldStartRest: existingLog?.completed_at == null };

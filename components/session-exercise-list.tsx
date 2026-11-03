@@ -136,6 +136,7 @@ export function SessionExerciseList({
                       isDuration={duration}
                       isBodyweight={isBodyweightExercise(exercise.exerciseId)}
                       targetRepMin={exercise.targetRepMin}
+                      targetSecondsMin={exercise.targetSecondsMin}
                       log={exercise.setLogs[setNumber]}
                       previousLog={exercise.previousSets[setNumber]}
                       exerciseName={exercise.name}

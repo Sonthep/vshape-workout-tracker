@@ -8,11 +8,14 @@ import { logSet } from "@/app/session/[id]/actions";
 import { useRestTimer } from "@/components/rest-timer";
 import { CheckCircleIcon } from "@/components/icons";
 
-function getInitialReps(...values: (number | null | undefined)[]): string {
-  const reps = values.find((value): value is number =>
-    value !== null && value !== undefined && Number.isInteger(value) && value > 0
+// A saved value is always shown as-is (even legacy 0) so editing never silently replaces it;
+// previous-session and target values are only suggestions and must be positive integers.
+function getInitialPositiveInt(saved: number | null | undefined, ...suggestions: (number | null | undefined)[]): string {
+  if (saved !== null && saved !== undefined && Number.isInteger(saved) && saved >= 0) return String(saved);
+  const value = suggestions.find((candidate): candidate is number =>
+    candidate !== null && candidate !== undefined && Number.isInteger(candidate) && candidate > 0
   );
-  return reps === undefined ? "" : String(reps);
+  return value === undefined ? "" : String(value);
 }
 
 function CompleteSetButton({ isCompleted }: { isCompleted: boolean }) {
@@ -35,6 +38,7 @@ export function SetRow({
   isDuration,
   isBodyweight,
   targetRepMin,
+  targetSecondsMin = null,
   log,
   previousLog,
   exerciseName,
@@ -47,6 +51,7 @@ export function SetRow({
   isDuration: boolean;
   isBodyweight: boolean;
   targetRepMin: number | null;
+  targetSecondsMin?: number | null;
   log: SetLog | undefined;
   previousLog: SetLog | undefined;
   exerciseName: string;
@@ -67,14 +72,10 @@ export function SetRow({
       : ""
   );
 
-  const [reps, setReps] = useState(() => getInitialReps(log?.reps, previousLog?.reps, targetRepMin));
+  const [reps, setReps] = useState(() => getInitialPositiveInt(log?.reps, previousLog?.reps, targetRepMin));
 
-  const [duration, setDuration] = useState<string>(
-    log?.durationSeconds !== undefined && log?.durationSeconds !== null
-      ? String(log.durationSeconds)
-      : previousLog?.durationSeconds !== undefined && previousLog?.durationSeconds !== null
-      ? String(previousLog.durationSeconds)
-      : ""
+  const [duration, setDuration] = useState(() =>
+    getInitialPositiveInt(log?.durationSeconds, previousLog?.durationSeconds, targetSecondsMin)
   );
 
   const [rir, setRir] = useState<string>(
@@ -85,22 +86,28 @@ export function SetRow({
       : ""
   );
 
+  // Editing any field dismisses a stale error from the previous save attempt.
+  function edit(setter: (value: string) => void, value: string) {
+    setError(null);
+    setter(value);
+  }
+
   function adjustWeight(delta: number) {
     const current = parseFloat(weight) || 0;
     const next = Math.max(0, current + delta);
-    setWeight(next.toString());
+    edit(setWeight, next.toString());
   }
 
   function adjustReps(delta: number) {
     const current = parseInt(reps, 10) || 0;
     const next = Math.max(1, current + delta);
-    setReps(next.toString());
+    edit(setReps, next.toString());
   }
 
   function adjustDuration(delta: number) {
     const current = parseInt(duration, 10) || 0;
     const next = Math.max(1, current + delta);
-    setDuration(next.toString());
+    edit(setDuration, next.toString());
   }
 
   async function completeSet(formData: FormData) {
@@ -109,7 +116,8 @@ export function SetRow({
     try {
       result = await logSet(formData);
     } catch {
-      setError("เชื่อมต่อไม่สำเร็จ ข้อมูลยังอยู่ กรุณาลองบันทึกอีกครั้ง");
+      // The failure may have happened after the save, so don't claim the set is unsaved.
+      setError("เกิดข้อผิดพลาดหรือเชื่อมต่อไม่สำเร็จ เซตนี้อาจถูกบันทึกแล้ว กรุณารีเฟรชหน้าเพื่อตรวจสอบ หรือลองบันทึกอีกครั้ง");
       return;
     }
     if (result.error !== null) {
@@ -158,8 +166,8 @@ export function SetRow({
                   step={1}
                   required
                   value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="กรอกวินาที"
+                  onChange={(e) => edit(setDuration, e.target.value)}
+                  placeholder={previousLog?.durationSeconds?.toString() ?? "กรอกวินาที"}
                 />
                 <button
                   type="button"
@@ -192,7 +200,7 @@ export function SetRow({
                       min={0}
                       step={0.5}
                       value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
+                      onChange={(e) => edit(setWeight, e.target.value)}
                       placeholder={previousLog?.weightKg?.toString() ?? "10"}
                     />
                     <button
@@ -226,7 +234,7 @@ export function SetRow({
                     step={1}
                     required
                     value={reps}
-                    onChange={(e) => setReps(e.target.value)}
+                    onChange={(e) => edit(setReps, e.target.value)}
                     placeholder="กรอกครั้ง"
                   />
                   <button
@@ -252,7 +260,7 @@ export function SetRow({
                   type="button"
                   className={rir === String(value) ? "active" : ""}
                   aria-pressed={rir === String(value)}
-                  onClick={() => setRir(String(value))}
+                  onClick={() => edit(setRir, String(value))}
                 >
                   {value}
                 </button>
