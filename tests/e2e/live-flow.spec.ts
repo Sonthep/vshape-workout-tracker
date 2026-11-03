@@ -17,6 +17,9 @@ test.skip(
 );
 
 test("a new user can sign up and complete the full workout, history, and progress flow", async ({ page }) => {
+  // Every set is a round trip to the live backend, so the flow takes well over the 30s default.
+  test.setTimeout(180_000);
+
   const email = `e2e-${Date.now()}@example.com`;
   const password = "TestPass123!";
 
@@ -30,29 +33,43 @@ test("a new user can sign up and complete the full workout, history, and progres
   });
 
   await test.step("start today's workout and a session", async () => {
-    await page.getByRole("link", { name: /start workout/i }).click();
+    await page.getByRole("link", { name: /เริ่มฝึกวันนี้/ }).click();
     await expect(page).toHaveURL(/\/workout\/\d$/);
-    await page.getByRole("button", { name: /start session/i }).click();
+    await page.getByRole("button", { name: /เริ่มเซสชัน/ }).click();
     await expect(page).toHaveURL(/\/session\/[0-9a-f-]+$/);
   });
 
-  await test.step("log the first set and see the rest timer auto-start", async () => {
-    const firstSet = page.locator(".set-row").first();
-    const weightInput = firstSet.locator('input[name="weightKg"]');
-    if (await weightInput.count()) {
-      await weightInput.fill("20");
-      await firstSet.locator('input[name="reps"]').fill("10");
-    } else {
-      await firstSet.locator('input[name="durationSeconds"]').fill("30");
-    }
-    await firstSet.getByRole("button", { name: /complete set/i }).click();
+  await test.step("log every set of every exercise and see the rest timer auto-start", async () => {
+    let sawRestTimer = false;
+    const nextExercise = page.getByRole("button", { name: /ท่าถัดไป/ });
 
-    await expect(page.getByRole("status")).toBeVisible();
-    await expect(page.locator(".rest-timer-label")).toContainText("Rest");
+    for (;;) {
+      const rows = page.locator(".set-row");
+      const rowCount = await rows.count();
+      for (let i = 0; i < rowCount; i++) {
+        const row = rows.nth(i);
+        const weightInput = row.locator('input[name="weightKg"]');
+        if (await weightInput.count()) await weightInput.fill("20");
+        const repsInput = row.locator('input[name="reps"]');
+        if (await repsInput.count()) await repsInput.fill("10");
+        else await row.locator('input[name="durationSeconds"]').fill("30");
+
+        await row.getByRole("button", { name: /บันทึกเซต/ }).click();
+        await expect(row).toHaveClass(/completed-set/, { timeout: 20_000 });
+
+        if (!sawRestTimer) {
+          await expect(page.getByRole("status").filter({ has: page.locator(".rest-timer-label") })).toBeVisible();
+          await expect(page.locator(".rest-timer-label")).toContainText("Rest");
+          sawRestTimer = true;
+        }
+      }
+      if (!(await nextExercise.isVisible())) break;
+      await nextExercise.click();
+    }
   });
 
   await test.step("finish the workout and land on the summary", async () => {
-    await page.getByRole("button", { name: /finish workout/i }).click();
+    await page.getByRole("button", { name: /จบการฝึก/ }).click();
     await expect(page).toHaveURL(/\/history\/[0-9a-f-]+$/);
     await expect(page.getByText(/sets completed/i)).toBeVisible();
   });
@@ -84,7 +101,8 @@ test("a new user can sign up and complete the full workout, history, and progres
       await page.getByRole("button", { name: /upload photo/i }).click();
       await expect(page.locator(".photo-card")).toHaveCount(1);
 
-      await page.getByRole("button", { name: /delete/i }).click();
+      page.once("dialog", (dialog) => dialog.accept());
+      await page.getByRole("button", { name: /ลบรูป/ }).click();
       await expect(page.locator(".photo-card")).toHaveCount(0);
     } finally {
       unlinkSync(fixturePath);
